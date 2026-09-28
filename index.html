@@ -287,6 +287,52 @@ a[href*="wa.me"],a[href*="whatsapp.com"]{
   .hero-secondary:hover{background:#fff}
 }
 
+
+/* JOUMERA V2.3 — polish pass */
+@media(max-width:699px){
+  .hero-inner{padding-top:30px;padding-bottom:38px}
+  .hero-visual{min-height:220px}
+  .logo-3d{width:190px;height:190px}
+  .logo-3d img{width:136px;height:136px}
+  .hero-copy h1{font-size:46px}
+  .hero-copy p{max-width:360px}
+  .summary-card{padding:12px 13px;gap:10px}
+  .summary-brand{padding-bottom:10px}
+  .summary-brand img{width:46px;height:46px}
+  .summary-brand h2{font-size:19px}
+  .summary-meta span{font-size:11px}
+  .summary-meta b{font-size:13px}
+  .quick{margin-top:14px}
+  .search{margin-bottom:18px}
+}
+@media(min-width:1024px){
+  .hero-inner{padding-top:62px;padding-bottom:62px}
+  .logo-3d{transition:transform .45s ease}
+  .hero-visual:hover .logo-3d{transform:translateY(-6px) rotate(-1deg)}
+  .hero-primary,.hero-secondary,.q,.desktop-actions button,.desktop-nav button{transition:.2s ease}
+  .hero-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(33,27,23,.18)}
+  .hero-secondary:hover,.q:hover,.desktop-actions button:hover{transform:translateY(-2px);border-color:#D8C7B9}
+  .desktop-nav button:hover{color:var(--accent2)}
+  .summary-card{transition:.22s ease}
+  .summary-card:hover{box-shadow:0 16px 38px rgba(50,34,24,.09)}
+  .catbox,.brandbox{transition:.22s ease}
+  .cat:hover .catbox,.brandbtn:hover .brandbox{transform:translateY(-3px);box-shadow:0 12px 28px rgba(50,34,24,.07)}
+}
+/* stronger product presentation, including dynamically injected cards */
+.products .p{position:relative}
+.products .p .pi{background:linear-gradient(180deg,#FAF8F6,#F1ECE7)}
+.products .p .pb{background:#fff}
+.products .p .btn{width:100%;margin-top:4px}
+.products .p .price{letter-spacing:.1px}
+.products .p img{transition:transform .35s ease}
+@media(min-width:1024px){
+  .products .p:hover img{transform:scale(1.035)}
+}
+/* cleaner section spacing */
+#home .sec + .sec{margin-top:4px}
+#home .head{padding-top:2px}
+.brand-note{margin-top:8px}
+
 </style>
 </head>
 <body>
