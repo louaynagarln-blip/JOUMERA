@@ -333,6 +333,60 @@ a[href*="wa.me"],a[href*="whatsapp.com"]{
 #home .head{padding-top:2px}
 .brand-note{margin-top:8px}
 
+
+/* ===== JOUMERA CAMPAIGN BANNERS ===== */
+.campaigns{max-width:1280px;margin:8px auto 34px;padding:0 16px;display:grid;gap:18px}
+.campaign{
+  position:relative;overflow:hidden;border-radius:24px;border:1px solid #eadfd5;
+  min-height:220px;background:#f7efe8;box-shadow:0 12px 34px rgba(57,39,26,.06)
+}
+.campaign:before{content:"";position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(circle at 14% 18%,rgba(255,255,255,.95),transparent 25%),
+  linear-gradient(120deg,rgba(255,255,255,.18),transparent 48%)}
+.campaign-inner{position:relative;z-index:2;display:grid;grid-template-columns:1fr;gap:18px;align-items:center;padding:22px}
+.campaign-visual{display:flex;align-items:center;justify-content:center;min-height:150px}
+.campaign-logo{
+  width:126px;height:126px;border-radius:26px;background:#fff;display:grid;place-items:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 18px 38px rgba(83,52,31,.13);
+  transform:rotate(-3deg)
+}
+.campaign-logo img{width:100px;height:100px;object-fit:contain;border-radius:20px}
+.campaign-copy{text-align:center}
+.campaign-kicker{font-size:10px;letter-spacing:1.8px;color:#8b6e58;font-weight:800}
+.campaign h3{margin:8px 0 7px;font-family:Georgia,"Times New Roman",serif;font-size:28px;font-weight:500}
+.campaign p{margin:0;color:#71675f;font-size:13px;line-height:1.75}
+.campaign-actions{display:flex;justify-content:center;gap:9px;margin-top:15px;flex-wrap:wrap}
+.campaign-actions button{border-radius:12px;padding:10px 14px;font-weight:800}
+.campaign .primary{background:var(--dark);color:#fff;border:1px solid var(--dark)}
+.campaign .secondary{background:rgba(255,255,255,.8);color:var(--dark);border:1px solid #d9c4b3}
+.campaign.collections{background:
+  radial-gradient(circle at 20% 20%,rgba(255,255,255,.98),transparent 24%),
+  linear-gradient(125deg,#ead7c7,#fbf5ef 52%,#dfc3aa)}
+.campaign.offers{background:
+  radial-gradient(circle at 16% 18%,rgba(255,255,255,.95),transparent 23%),
+  linear-gradient(125deg,#e9d2bd,#fbf4ed 55%,#d9b89a)}
+.campaign.offers .campaign-logo:after{
+  content:"SPECIAL OFFERS";position:absolute;margin-top:118px;
+  background:#fff7ef;border:1px solid #ddc3ad;border-radius:999px;padding:6px 10px;
+  font-size:9px;letter-spacing:1px;color:#7d5e46;box-shadow:0 6px 16px rgba(64,42,27,.08)
+}
+@media(min-width:700px){
+  .campaign-inner{grid-template-columns:.8fr 1.2fr;padding:26px 30px}
+  .campaign-visual{grid-column:1;grid-row:1}
+  .campaign-copy{grid-column:2;grid-row:1;text-align:right}
+  .campaign-actions{justify-content:flex-start}
+  .campaign h3{font-size:32px}
+}
+@media(min-width:1024px){
+  .campaign{min-height:260px}
+  .campaign-inner{grid-template-columns:.95fr 1.05fr;min-height:260px;padding:34px 46px}
+  .campaign-logo{width:170px;height:170px;border-radius:34px;transition:.3s}
+  .campaign-logo img{width:134px;height:134px;border-radius:26px}
+  .campaign:hover .campaign-logo{transform:translateY(-4px) rotate(-2deg)}
+  .campaign h3{font-size:40px}
+  .campaign p{font-size:14px;max-width:560px}
+}
+
 </style>
 </head>
 <body>
@@ -399,6 +453,39 @@ a[href*="wa.me"],a[href*="whatsapp.com"]{
 
   <div id="home"><div class="loading">جاري تحميل المنتجات...</div></div>
 
+
+  <section class="campaigns" id="campaigns">
+    <article class="campaign collections">
+      <div class="campaign-inner">
+        <div class="campaign-visual"><div class="campaign-logo"><img src="/icon-512.png" alt="JOUMERA"></div></div>
+        <div class="campaign-copy">
+          <div class="campaign-kicker">JOUMERA COLLECTIONS</div>
+          <h3>اكتشف مجموعات JOUMERA</h3>
+          <p>كل ما تحتاجه لبيت أكثر أناقة وراحة، من التفاصيل اليومية إلى القطع المميزة.</p>
+          <div class="campaign-actions">
+            <button class="primary" id="campaignCategories">تصفح الأقسام</button>
+            <button class="secondary" id="campaignNew">شاهد الجديد</button>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="campaign offers">
+      <div class="campaign-inner">
+        <div class="campaign-visual"><div class="campaign-logo"><img src="/icon-512.png" alt="JOUMERA"></div></div>
+        <div class="campaign-copy">
+          <div class="campaign-kicker">SPECIAL OFFERS</div>
+          <h3>عروض JOUMERA</h3>
+          <p>اختيارات مميزة بأسعار أجمل على تشكيلة مختارة من منتجات JOUMERA.</p>
+          <div class="campaign-actions">
+            <button class="primary" id="campaignOffers">شاهد العروض</button>
+            <button class="secondary" id="campaignShop">تسوّق الآن</button>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
   <section class="brand-note" id="brandStory">
     <div class="brand-note-inner">
       <img src="/icon-512.png" alt="JOUMERA">
@@ -438,6 +525,10 @@ a[href*="wa.me"],a[href*="whatsapp.com"]{
   q('#navShop')?.addEventListener('click',goHome);
   q('#navCollections')?.addEventListener('click',()=>click('categoriesBtn'));
   q('#navAbout')?.addEventListener('click',()=>q('#brandStory')?.scrollIntoView({behavior:'smooth'}));
+  q('#campaignCategories')?.addEventListener('click',()=>click('categoriesBtn'));
+  q('#campaignNew')?.addEventListener('click',()=>click('new'));
+  q('#campaignOffers')?.addEventListener('click',()=>click('offers'));
+  q('#campaignShop')?.addEventListener('click',goHome);
 })();
 </script>
 </body>
