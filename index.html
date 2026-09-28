@@ -393,6 +393,52 @@ a[href*="wa.me"],a[href*="whatsapp.com"]{
 .heroimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:8;cursor:pointer}
 .hero.banner-active .hero-inner{visibility:hidden}
 
+
+/* ===== JOUMERA PRODUCT EXPERIENCE ===== */
+.product-detail{display:grid;gap:18px}
+.product-gallery{display:grid;grid-template-columns:1fr;gap:10px}
+.product-main-image{
+  aspect-ratio:1;background:linear-gradient(180deg,#fbf9f7,#f1ebe6);
+  border:1px solid var(--line);border-radius:22px;display:grid;place-items:center;overflow:hidden
+}
+.product-main-image img{width:100%;height:100%;object-fit:contain}
+.product-thumbs{display:flex;gap:8px;overflow:auto;padding-bottom:2px}
+.product-thumb{width:68px;height:68px;flex:0 0 auto;border:1px solid var(--line);border-radius:12px;background:#fff;padding:3px}
+.product-thumb img{width:100%;height:100%;object-fit:cover;border-radius:9px}
+.product-info{display:flex;flex-direction:column;gap:12px}
+.product-kicker{font-size:11px;letter-spacing:1px;color:var(--muted)}
+.product-price{font-size:28px;font-weight:900}
+.product-stock{display:inline-flex;align-items:center;gap:7px;font-size:13px}
+.product-stock:before{content:"";width:8px;height:8px;border-radius:50%;background:#43a36f}
+.product-stock.out:before{background:#b6aba2}
+.product-desc{color:#5f5751;line-height:1.85;font-size:14px}
+.product-cta{display:grid;grid-template-columns:1fr;gap:8px}
+.product-cta .btn{min-height:46px}
+.product-related{margin-top:24px}
+.product-related h3{margin:0 0 12px;font-size:19px}
+.p{position:relative}
+.product-badge{
+  position:absolute;top:10px;right:10px;z-index:3;
+  background:rgba(255,255,255,.92);border:1px solid var(--line);
+  border-radius:999px;padding:5px 9px;font-size:10px;font-weight:800;color:#765740;
+  backdrop-filter:blur(8px)
+}
+.pi{position:relative}
+.pi:after{content:"عرض التفاصيل";position:absolute;left:50%;bottom:10px;transform:translate(-50%,8px);opacity:0;
+  background:rgba(28,22,18,.86);color:#fff;border-radius:999px;padding:7px 11px;font-size:10px;transition:.2s;pointer-events:none}
+@media(min-width:1024px){.p:hover .pi:after{opacity:1;transform:translate(-50%,0)}}
+.catbox{position:relative}
+.catbox:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(35,27,22,.08));pointer-events:none}
+@media(min-width:760px){
+  .product-detail{grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:28px;align-items:start}
+  .product-cta{grid-template-columns:1fr 1fr}
+}
+@media(max-width:699px){
+  #productModal .sheet{padding:14px}
+  .product-main-image{border-radius:18px}
+  .product-price{font-size:24px}
+}
+
 </style>
 </head>
 <body>
