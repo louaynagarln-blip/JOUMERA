@@ -487,6 +487,55 @@ a[href*="wa.me"],a[href*="whatsapp.com"]{
   .cat span{font-size:11px}
 }
 
+
+/* ===== TRUST + FOOTER + CHECKOUT ===== */
+.trust-bar{max-width:1180px;margin:14px auto 18px;padding:0 16px}
+.trust-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.trust-item{
+  border:1px solid var(--line);border-radius:15px;background:#fff;padding:12px;
+  display:flex;align-items:center;gap:9px;min-height:62px
+}
+.trust-icon{width:34px;height:34px;border-radius:11px;background:#F6EEE7;display:grid;place-items:center;flex:0 0 auto}
+.trust-item b{display:block;font-size:12px}
+.trust-item span{display:block;color:var(--muted);font-size:10px;margin-top:2px;line-height:1.4}
+
+.site-footer{background:#211B17;color:#F7F1EC;margin-top:36px}
+.footer-inner{max-width:1280px;margin:0 auto;padding:34px 20px 96px;display:grid;gap:26px}
+.footer-brand{display:flex;gap:13px;align-items:center}
+.footer-brand img{width:58px;height:58px;border-radius:16px;background:#fff;object-fit:contain}
+.footer-brand strong{font-family:Georgia,"Times New Roman",serif;font-size:22px;letter-spacing:1.4px}
+.footer-brand p{margin:5px 0 0;color:#cfc2b8;font-size:12px;line-height:1.6}
+.footer-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.footer-col h4{margin:0 0 10px;font-size:13px}
+.footer-col button{display:block;border:0;background:transparent;color:#d9cec5;padding:5px 0;font-size:12px;text-align:right}
+.footer-col button:hover{color:#fff}
+.footer-bottom{border-top:1px solid rgba(255,255,255,.12);padding-top:16px;color:#a99b90;font-size:11px}
+
+#cartModal .sheet{background:#FCFAF8}
+.checkout-layout{display:grid;gap:14px}
+.checkout-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
+.checkout-card h3{margin:0 0 10px;font-size:15px}
+.checkout-summary{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px 0 0;margin-top:12px;border-top:1px solid var(--line)
+}
+.checkout-summary b:last-child{font-size:20px}
+.checkout-note{display:flex;gap:8px;align-items:flex-start;background:#F8F3EF;border-radius:12px;padding:10px 11px;color:#665B53;font-size:11px;line-height:1.6}
+#orderBtn{min-height:48px;border-radius:13px!important;background:var(--dark)!important}
+#saveCartBtn{min-height:44px}
+@media(min-width:700px){
+  .trust-grid{grid-template-columns:repeat(4,1fr)}
+  .footer-inner{padding-bottom:42px}
+  .footer-cols{grid-template-columns:repeat(3,1fr)}
+  .checkout-layout{grid-template-columns:1.25fr .75fr;align-items:start}
+  .checkout-side{position:sticky;top:8px}
+}
+@media(min-width:1024px){
+  .site-footer{margin-top:54px}
+  .footer-inner{grid-template-columns:1.1fr 1.6fr;align-items:start}
+  .footer-bottom{grid-column:1/-1}
+}
+
 </style>
 </head>
 <body>
@@ -538,6 +587,16 @@ a[href*="wa.me"],a[href*="whatsapp.com"]{
         <div><span>التقييمات</span><b>★ 4.9</b></div>
         <div><span>حسابي</span><b id="accountLabel">دخول / تسجيل</b></div>
       </div>
+    </div>
+  </section>
+
+
+  <section class="trust-bar" aria-label="مزايا JOUMERA">
+    <div class="trust-grid">
+      <div class="trust-item"><div class="trust-icon">🚚</div><div><b>توصيل في لبنان</b><span>خدمة توصيل مرتبة وسهلة</span></div></div>
+      <div class="trust-item"><div class="trust-icon">💬</div><div><b>دعم عبر WhatsApp</b><span>تواصل سريع عند الحاجة</span></div></div>
+      <div class="trust-item"><div class="trust-icon">✓</div><div><b>اختيارات موثوقة</b><span>منتجات منتقاة بعناية</span></div></div>
+      <div class="trust-item"><div class="trust-icon">♡</div><div><b>تجربة سهلة</b><span>حفظ المفضلة والسلة</span></div></div>
     </div>
   </section>
 
@@ -597,6 +656,24 @@ a[href*="wa.me"],a[href*="whatsapp.com"]{
   </section>
 
   <div class="pages" id="pages"></div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">
+          <img src="/icon-512.png" alt="JOUMERA">
+          <div><strong>JOUMERA</strong><p>Home & Lifestyle<br>تفاصيل أنيقة للبيت والحياة اليومية.</p></div>
+        </div>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col"><h4>تسوّق</h4><button id="footerShop">المنتجات</button><button id="footerCollections">الأقسام</button><button id="footerNew">وصل حديثًا</button><button id="footerOffers">العروض</button></div>
+        <div class="footer-col"><h4>حسابك</h4><button id="footerAccount">تسجيل الدخول</button><button id="footerCart">السلة</button><button id="footerWishlist">المفضلة</button></div>
+        <div class="footer-col"><h4>JOUMERA</h4><button id="footerAbout">عن JOUMERA</button><button id="footerSearch">البحث</button></div>
+      </div>
+      <div class="footer-bottom">© 2026 JOUMERA — Home & Lifestyle. جميع الحقوق محفوظة.</div>
+    </div>
+  </footer>
+
 </main>
 
 <nav class="bottom">
@@ -606,7 +683,7 @@ a[href*="wa.me"],a[href*="whatsapp.com"]{
   <button class="cartbadge" id="cartBtn"><b>🛒</b>السلة<span class="num" id="cartNum">0</span></button>
 </nav>
 
-<div class="modal" id="cartModal"><div class="sheet"><div class="mh"><h2>سلة الطلب</h2><div class="sp"></div><button class="btn light close">إغلاق</button></div><div id="cartRows"></div><div class="head"><b>المجموع قبل الخصم</b><b id="cartTotal">$0.00</b></div><div class="couponrow"><input id="couponCode" placeholder="كود الخصم - اختياري"><button class="btn light" id="couponHint">استخدام</button></div><div class="muted" style="font-size:12px;margin-top:5px">الخصم النهائي يُحسب على السيرفر عند إرسال الطلب.</div><label class="field"><span>عنوان التوصيل</span><input id="orderAddress" placeholder="المنطقة - الشارع"></label><label class="field"><span>ملاحظات</span><textarea id="orderNotes" rows="2"></textarea></label><button class="btn" id="orderBtn" style="width:100%">إرسال الطلب</button></div></div>
+<div class="modal" id="cartModal"><div class="sheet"><div class="mh"><h2>إتمام الطلب</h2><div class="sp"></div><button class="btn light close">إغلاق</button></div><div class="checkout-layout"><div class="checkout-main"><div class="checkout-card"><h3>المنتجات</h3><div id="cartRows"></div></div><div class="checkout-card"><h3>عنوان التوصيل</h3><label class="field"><span>المنطقة والشارع</span><input id="orderAddress" placeholder="مثال: بيروت - الحمرا - اسم الشارع"></label><label class="field"><span>ملاحظات للطلب</span><textarea id="orderNotes" rows="3" placeholder="أي تفاصيل إضافية للتوصيل..."></textarea></label></div></div><aside class="checkout-side"><div class="checkout-card"><h3>ملخص الطلب</h3><div class="couponrow"><input id="couponCode" placeholder="كود الخصم - اختياري"><button class="btn light" id="couponHint">تطبيق</button></div><div class="checkout-note" style="margin-top:10px"><span>ⓘ</span><span>الخصم النهائي ورسوم الطلب تُحسب عند إرسال الطلب.</span></div><div class="checkout-summary"><b>المجموع</b><b id="cartTotal">$0.00</b></div><button class="btn" id="orderBtn" style="width:100%;margin-top:14px">تأكيد وإرسال الطلب</button></div></aside></div></div></div>
 <div class="modal" id="accountModal"><div class="sheet"><div class="mh"><h2>حساب الزبون</h2><div class="sp"></div><button class="btn light close">إغلاق</button></div><div id="accountArea"></div></div></div>
 <div class="modal" id="pageModal"><div class="sheet"><div class="mh"><h2 id="pageTitle"></h2><div class="sp"></div><button class="btn light close">إغلاق</button></div><div id="pageContent"></div></div></div>
 <div class="toast" id="toast"></div>
@@ -629,6 +706,15 @@ a[href*="wa.me"],a[href*="whatsapp.com"]{
   q('#campaignNew')?.addEventListener('click',()=>click('new'));
   q('#campaignOffers')?.addEventListener('click',()=>click('offers'));
   q('#campaignShop')?.addEventListener('click',goHome);
+  q('#footerShop')?.addEventListener('click',goHome);
+  q('#footerCollections')?.addEventListener('click',()=>click('categoriesBtn'));
+  q('#footerNew')?.addEventListener('click',()=>click('new'));
+  q('#footerOffers')?.addEventListener('click',()=>click('offers'));
+  q('#footerAccount')?.addEventListener('click',()=>click('accountBtn'));
+  q('#footerCart')?.addEventListener('click',()=>click('cartBtn'));
+  q('#footerWishlist')?.addEventListener('click',()=>{click('accountBtn');setTimeout(()=>document.querySelector('[data-ac="favorites"]')?.click(),120)});
+  q('#footerAbout')?.addEventListener('click',()=>q('#brandStory')?.scrollIntoView({behavior:'smooth'}));
+  q('#footerSearch')?.addEventListener('click',()=>{q('#search')?.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>q('#search')?.focus(),250)});
 })();
 </script>
 </body>
