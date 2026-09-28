@@ -706,7 +706,57 @@ a[href*="wa.me"],a[href*="whatsapp.com"]{
 <div class="modal" id="pageModal"><div class="sheet"><div class="mh"><h2 id="pageTitle"></h2><div class="sp"></div><button class="btn light close">إغلاق</button></div><div id="pageContent"></div></div></div>
 <div class="toast" id="toast"></div>
 
-<script src="https://aiizdgxutredbzcrkkjq.supabase.co/functions/v1/hoco-assets/site.js?v=20260928-3"></script>
+<script src="https://aiizdgxutredbzcrkkjq.supabase.co/functions/v1/hoco-assets/site.js?v=20260928-4"></script>
+<script>
+setTimeout(async function(){
+  var home=document.getElementById('home');
+  if(!home || !home.querySelector('.skeleton-wrap')) return;
+  try{
+    var res=await fetch('https://aiizdgxutredbzcrkkjq.supabase.co/functions/v1/hoco-store-v2/catalog',{cache:'no-store'});
+    var data=await res.json();
+    var ps=(data.products||[]).filter(function(p){return p.visible!==false});
+    if(!ps.length){home.innerHTML='<div style="padding:24px;text-align:center">لا توجد منتجات ظاهرة حاليًا.</div>';return}
+    var out='<h2 style="margin:28px 0 14px">منتجات JOUMERA</h2><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:14px">';
+    ps.forEach(function(p){
+      var name=String(p.name||'منتج').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      var pic=p.mainImage ? '<img src="'+p.mainImage+'" style="width:100%;aspect-ratio:1;object-fit:cover">' : '<div style="aspect-ratio:1;background:#f4eee8;display:grid;place-items:center;font-weight:800">JOUMERA</div>';
+      var price=(p.retailPrice!=null && Number(p.retailPrice)>0) ? '
+<script>
+(function(){
+  const q=s=>document.querySelector(s);
+  const click=id=>document.getElementById(id)?.click();
+  const goHome=()=>q('#home')?.scrollIntoView({behavior:'smooth',block:'start'});
+  q('#desktopAccount')?.addEventListener('click',()=>click('accountBtn'));
+  q('#desktopCart')?.addEventListener('click',()=>click('cartBtn'));
+  q('#desktopSearch')?.addEventListener('click',()=>{q('#search')?.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>q('#search')?.focus(),300)});
+  q('#heroShop')?.addEventListener('click',goHome);
+  q('#heroCollections')?.addEventListener('click',()=>click('categoriesBtn'));
+  q('#navShop')?.addEventListener('click',goHome);
+  q('#navCollections')?.addEventListener('click',()=>click('categoriesBtn'));
+  q('#navAbout')?.addEventListener('click',()=>q('#brandStory')?.scrollIntoView({behavior:'smooth'}));
+  q('#campaignCategories')?.addEventListener('click',()=>click('categoriesBtn'));
+  q('#campaignNew')?.addEventListener('click',()=>click('new'));
+  q('#campaignOffers')?.addEventListener('click',()=>click('offers'));
+  q('#campaignShop')?.addEventListener('click',goHome);
+  q('#footerShop')?.addEventListener('click',goHome);
+  q('#footerCollections')?.addEventListener('click',()=>click('categoriesBtn'));
+  q('#footerNew')?.addEventListener('click',()=>click('new'));
+  q('#footerOffers')?.addEventListener('click',()=>click('offers'));
+  q('#footerAccount')?.addEventListener('click',()=>click('accountBtn'));
+  q('#footerCart')?.addEventListener('click',()=>click('cartBtn'));
+  q('#footerWishlist')?.addEventListener('click',()=>{click('accountBtn');setTimeout(()=>document.querySelector('[data-ac="favorites"]')?.click(),120)});
+  q('#footerAbout')?.addEventListener('click',()=>q('#brandStory')?.scrollIntoView({behavior:'smooth'}));
+  q('#footerSearch')?.addEventListener('click',()=>{q('#search')?.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>q('#search')?.focus(),250)});
+})();
+</script>
+</body>
+</html>+Number(p.retailPrice).toFixed(2) : 'السعر عند الطلب';
+      out+='<div style="background:#fff;border:1px solid #e8e0d8;border-radius:18px;overflow:hidden">'+pic+'<div style="padding:12px"><b>'+name+'</b><div style="margin-top:8px;font-weight:800">'+price+'</div></div></div>';
+    });
+    home.innerHTML=out+'</div>';
+  }catch(e){console.error('catalog recovery',e)}
+},2000);
+</script>
 <script>
 (function(){
   const q=s=>document.querySelector(s);
