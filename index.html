@@ -439,6 +439,54 @@ a[href*="wa.me"],a[href*="whatsapp.com"]{
   .product-price{font-size:24px}
 }
 
+
+/* ===== JOUMERA COLLECTIONS + FILTERS ===== */
+#storeFilterBar{max-width:1180px;margin:0 auto 18px;padding:0 16px}
+#filterToggle{
+  display:none;width:100%;min-height:46px;border:1px solid var(--line);border-radius:14px;
+  background:#fff;color:var(--ink);font-weight:800;align-items:center;justify-content:space-between;padding:0 14px
+}
+#storeFilters{
+  max-width:1180px!important;margin:0 auto 22px!important;padding:0 16px!important;
+  display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important
+}
+#storeFilters select{
+  min-height:46px!important;border:1px solid var(--line)!important;border-radius:14px!important;
+  background:#fff!important;padding:0 12px!important;color:var(--ink)!important
+}
+#storeFilters label{
+  min-height:46px!important;grid-column:auto!important;display:flex!important;align-items:center!important;
+  gap:8px!important;border:1px solid var(--line);border-radius:14px;padding:0 12px;background:#fff;font-size:13px!important
+}
+#storeFilters input[type="checkbox"]{accent-color:var(--accent)}
+.cats{gap:14px}
+.catbox{
+  aspect-ratio:1.08/1;border-radius:20px;background:linear-gradient(180deg,#F8F5F2,#EEE6DF);
+  box-shadow:0 8px 20px rgba(50,34,24,.045)
+}
+.catbox img{transition:transform .35s ease}
+.cat span{font-size:12px;margin-top:8px}
+@media(min-width:1024px){
+  .cat:hover .catbox img{transform:scale(1.045)}
+  .cat:hover span{color:var(--accent2)}
+}
+@media(max-width:699px){
+  #storeFilterBar{display:block;margin-bottom:10px}
+  #filterToggle{display:flex}
+  #storeFilters{
+    grid-template-columns:1fr 1fr!important;
+    max-height:0;opacity:0;overflow:hidden;margin-bottom:0!important;padding-top:0!important;padding-bottom:0!important;
+    transition:max-height .25s ease,opacity .2s ease,padding .2s ease
+  }
+  #storeFilters.open{
+    max-height:330px;opacity:1;padding-top:10px!important;padding-bottom:4px!important;margin-bottom:14px!important
+  }
+  #storeFilters label{grid-column:1/-1!important}
+  .cats{gap:10px}
+  .catbox{border-radius:16px}
+  .cat span{font-size:11px}
+}
+
 </style>
 </head>
 <body>
