@@ -13,7 +13,8 @@ import * as ui from './ui/ui';
 
 type Tier = 'low' | 'medium' | 'high';
 const TIERS: Tier[] = ['low', 'medium', 'high'];
-const PIXEL_CAP: Record<Tier, number> = { low: 1.35, medium: 1.8, high: 2.25 };
+// Keep the adaptive floor sharp on high-density Android screens; low and medium both disable shadows.
+const PIXEL_CAP: Record<Tier, number> = { low: 1.55, medium: 1.8, high: 2.25 };
 const SHADOW: Record<Tier, number> = { low: 0, medium: 0, high: 2048 };
 
 const settings: Settings = loadSettings();
