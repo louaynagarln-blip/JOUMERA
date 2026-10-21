@@ -10,7 +10,7 @@ npm test
 
 npm run build
 # tsc --noEmit && vite build: passed (Vite 5.4.21)
-# output: mall JS 134.57 kB (45.37 kB gzip), Three.js chunk 554.20 kB (141.85 kB gzip)
+# output: mall JS 134.49 kB (45.36 kB gzip), Three.js chunk 554.20 kB (141.85 kB gzip)
 
 Additional regression cases:
 - touch-down on the joystick is neutral regardless of where on its pad it starts
