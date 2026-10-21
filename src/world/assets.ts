@@ -78,7 +78,7 @@ export function batchArchitecture(group: THREE.Group): void {
   group.updateMatrixWorld(true);
   const batches = new Map<string, THREE.Mesh[]>();
   for (const object of group.children) {
-    if (!(object instanceof THREE.Mesh) || object instanceof THREE.InstancedMesh || Array.isArray(object.material) || object.material.transparent) continue;
+    if (object.userData.interactive || !(object instanceof THREE.Mesh) || object instanceof THREE.InstancedMesh || Array.isArray(object.material) || object.material.transparent) continue;
     const bounds = new THREE.Box3().setFromObject(object);
     const c = bounds.getCenter(new THREE.Vector3());
     const key = `${object.material.uuid}/${object.castShadow}/${object.receiveShadow}/${Math.floor(c.x/12)}/${Math.floor(c.z/12)}/${Boolean(object.geometry.index)}/${Object.keys(object.geometry.attributes).sort().join(',')}`;

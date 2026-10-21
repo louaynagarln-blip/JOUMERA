@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { buildMall, BOUNDS, STAGES, type Mall, type Pickable } from './world/mall';
 import { Player } from './controls/player';
+import { ProductFocus } from './world/productFocus';
 import { NavGrid } from './controls/nav';
 import { STORES, storeRect, type StoreDef } from './data/catalog';
 import { loadSettings, saveSettings, type Settings } from './settings';
@@ -129,7 +130,12 @@ async function boot(): Promise<void> {
   };
   ui.hooks.onStopWalk = () => { player.stop(); ui.setAutoWalk(false); };
   player.onAutoWalkEnd = (why) => { if (why === 'stuck') ui.toast(t('stuck')); };
-  player.onInteract = ui.triggerInteract;
+  ui.hooks.onInteract = player.onInteract = () => {
+    if (!player.enabled) return;
+    const current = productFocus.select(player.camera, nearest);
+    nearest = current; ui.setInteract(current ? current.product : null);
+    if (current) ui.triggerInteract();
+  };
 
   renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); cancelAnimationFrame(raf); ui.showContextLost(); });
 
@@ -155,6 +161,8 @@ async function boot(): Promise<void> {
   let last = performance.now();
   let fpsFrames = 0, fpsTime = 0, slowWindows = 0, lastQualityChange = 0;
   let nearest: Pickable | null = null;
+  const productFocus = new ProductFocus(mall.group, mall.pickables);
+  let nextFocusCheck = 0;
   let curStore: StoreDef | null = null;
   const frame = (now: number) => {
     raf = requestAnimationFrame(frame);
@@ -165,14 +173,12 @@ async function boot(): Promise<void> {
     ui.setAutoWalk(player.autoWalking);
 
     if (player.enabled) {
-      let best: Pickable | null = null, bestD = 3.2;
-      const fx = -Math.sin(player.yaw), fz = -Math.cos(player.yaw);
-      for (const pk of mall.pickables) {
-        const dx = pk.pos.x - player.x, dz = pk.pos.z - player.z;
-        const d = Math.hypot(dx, dz);
-        if (d < bestD && (dx * fx + dz * fz) / d > 0.6) { best = pk; bestD = d; }
+      // Limit scene raycasts to 10 Hz so product discovery does not compete with walking.
+      if (now >= nextFocusCheck) {
+        nextFocusCheck = now + 100;
+        const best = productFocus.select(player.camera, nearest);
+        if (best !== nearest) { nearest = best; ui.setInteract(best ? best.product : null); }
       }
-      if (best !== nearest) { nearest = best; ui.setInteract(best ? best.product : null); }
       const st = storeAt(player.x, player.z);
       if (st !== curStore) { curStore = st; ui.setBanner(st); }
     }

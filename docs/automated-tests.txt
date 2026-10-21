@@ -2,7 +2,7 @@ JOUMERA development verification — 2026-10-21
 
 npm install: passed (existing npm http-proxy configuration warning).
 npm run lint: passed (tsc --noEmit).
-npm test: passed, 49 tests in 3 files.
+npm test: passed, 57 tests in 4 files.
 npm run build: passed (TypeScript and Vite 5.4.21).
 
 New display checks cover rotated off-centre models seated on their surface,
@@ -24,3 +24,8 @@ A 20-step-per-second controller simulation reaches its goal around a wall
 without penetration or a stuck event. This is NOT an Android performance measurement.
 Auto-walk slows at waypoints, and unavailable routes cancel stale navigation
 and show an Arabic/English explanation.
+
+Product focus regression tests cover opaque walls, storefront glass, decorative
+transparent overlays, camera pitch, range, hidden geometry and centre preference.
+Mobile and keyboard activation both revalidate visibility at activation time.
+These are Three.js raycasting tests without a WebGL renderer, not visual QA.

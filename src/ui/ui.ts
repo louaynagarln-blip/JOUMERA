@@ -16,6 +16,7 @@ export const hooks = {
   onModal: (_open: boolean) => {},
   onWalkTo: (_storeId: string) => {},
   onStopWalk: () => {},
+  onInteract: () => {},
   onSettings: (_s: Settings) => {},
   onEnter: () => {},
   onTutorialStart: () => {},
@@ -297,7 +298,7 @@ export function initUI(s: Settings): void {
   $('btn-search').onclick = openSearch;
   $('btn-cart').onclick = openCart;
   $('btn-settings').onclick = openSettings;
-  $('interact').onclick = triggerInteract;
+  $('interact').onclick = () => hooks.onInteract();
   $('walk-stop').onclick = () => hooks.onStopWalk();
   $('tut-go').onclick = () => {
     if (($('tut-never') as HTMLInputElement).checked) { settings.tutorialDone = true; hooks.onSettings(settings); }

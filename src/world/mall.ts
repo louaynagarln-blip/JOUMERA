@@ -137,6 +137,7 @@ export async function buildMall(
     const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0), mat);
     m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
     m.castShadow = cast;
+    if (mat === M.glass) m.userData.blocksInteraction = true;
     m.receiveShadow = true;
     group.add(m);
     if (collide) colliders.push({ minX: x0, maxX: x1, minZ: z0, maxZ: z1 });
@@ -531,6 +532,7 @@ export async function buildMall(
   // Entrance is glazed at the edge of the navigable floor, not an unbounded drop.
   colliders.push({minX:-20,maxX:20,minZ:11.9,maxZ:12.2});
 
+  for (const pickable of pickables) pickable.obj.userData.interactive = true;
   batchArchitecture(group);
   return {
     group, colliders, pickables, sun,
