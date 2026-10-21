@@ -4,6 +4,7 @@ import type { Box } from '../controls/collision';
 import { STORES, type Product, type StoreDef } from '../data/catalog';
 import { Furnishings, disposeObject, batchArchitecture, ASSETS, type AssetName } from './assets';
 import { makeProductMesh } from './productMesh';
+import { photoSize, productDisplaySlot, seatDisplayObject } from './displayLayout';
 
 export const BOUNDS = { minX: -20, maxX: 20, minZ: -36, maxZ: 12 };
 export interface Pickable { product: Product; obj: THREE.Object3D; pos: THREE.Vector3 }
@@ -322,6 +323,16 @@ export async function buildMall(
   group.add(sun, sun.target);
   group.add(new THREE.HemisphereLight(0xfff6e8, 0x8a8277, 0.35));
 
+  // Decode photographs before sizing their displays; one texture per URL is shared by all placements.
+  const productPhotos = new Map<string, THREE.Texture>();
+  await Promise.all([...new Set(STORES.flatMap(st => st.products.flatMap(p => p.image ? [p.image] : [])))].map(async url => {
+    try {
+      const texture = await loader.loadAsync(url);
+      texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = aniso;
+      productPhotos.set(url, texture); extraDispose.push(texture);
+    } catch { /* A missing photograph must not prevent walking or opening the catalogue. */ }
+  }));
+
   const buildStore = (st: StoreDef) => {
     const s = st.side;
     const rx = (a: number, b: number): [number, number] => [Math.min(s * a, s * b), Math.max(s * a, s * b)];
@@ -408,12 +419,12 @@ export async function buildMall(
       st.products.slice(0, 3).forEach((product, i) => {
         if (!product.image) return;
         const z = st.zc - 3.15 + i * 3.05;
-        const texture = loader.load(product.image);
-        texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = aniso; extraDispose.push(texture);
+        const texture = productPhotos.get(product.image);
+        if (!texture) return;
         hocoProductTextures.set(product, texture);
         box(...rx(19.36, 19.7), 0.96, 2.98, z - 1.25, z + 1.25, M.dark, false, false);
         box(...rx(19.28, 19.36), 0.9, 3.02, z - 1.29, z + 1.29, brassMat, false, false);
-        const photo = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.55), new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide }));
+        const photo = new THREE.Mesh(new THREE.PlaneGeometry(...photoSize(texture.image.width, texture.image.height, 1.9, 1.55)), new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide }));
         photo.position.set(s * 19.23, 2.0, z); photo.rotation.y = -s * Math.PI / 2; group.add(photo);
         box(...rx(18.25, 19.18), 0.78, 0.86, z - 1.25, z + 1.25, woodMat, false, false).castShadow = true;
         const nameplate = label('PRICE NOT VERIFIED', 2.2, 0.28, '#f2d7a3', null, 3);
@@ -422,10 +433,26 @@ export async function buildMall(
       });
       // A dark anodized service island with a real brass reveal anchors the centre without closing the aisle.
       retailCounter(group, colliders, s * 13.1, st.zc, 1.55, 3.6, .92, M.dark, M.stone, brassMat);
-      for (const z of [st.zc - 1.15, st.zc, st.zc + 1.15]) {
-        const screen = box(...rx(12.55, 13.62), 0.93, 1.02, z - .39, z + .39, std(0x171b20, .24, .35), false, false);
-        screen.castShadow = false;
-      }
+      // Real product photography on tilted discovery terminals replaces the blank island blocks.
+      st.products.slice(0, 3).forEach((product, i) => {
+        const texture = hocoProductTextures.get(product);
+        if (!texture) return;
+        const z = st.zc - 1.15 + i * 1.15;
+        box(...rx(12.97, 13.23), .92, 1.12, z - .12, z + .12, M.frame, false, false);
+        const terminal = new THREE.Group();
+        terminal.add(new THREE.Mesh(new THREE.BoxGeometry(.88, .68, .035), brassMat));
+        const bezel = new THREE.Mesh(new THREE.BoxGeometry(.84, .64, .018), M.dark);
+        bezel.position.z = .026; terminal.add(bezel);
+        const photo = new THREE.Mesh(
+          new THREE.PlaneGeometry(...photoSize(texture.image.width, texture.image.height, .76, .56)),
+          new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }),
+        );
+        photo.position.z = .038; terminal.add(photo);
+        terminal.position.set(s * 13.1, 1.4, z);
+        terminal.rotation.set(-.22, -s * Math.PI / 2, 0, 'YXZ');
+        group.add(terminal);
+        pickables.push({ product, obj: terminal, pos: new THREE.Vector3(s * 13.1, 1.4, z) });
+      });
       for (const z of [st.zc - 4.2, st.zc + 4.2]) {
         const edge = box(...rx(10.4, 18.6), 0.03, 0.16, z - .045, z + .045, brassMat, false, false);
         edge.castShadow = false;
@@ -460,18 +487,11 @@ export async function buildMall(
     box(c0 - 0.02, c1 + 0.02, 1.05, 1.09, st.zc + 2.88, st.zc + 4.82, M.gold, false);
 
     st.products.slice(0, 4).forEach((p, i) => {
-      const home = st.id === 'home-gallery';
-      const z = home && i === 0 ? st.zc : st.zc - 2.7 + i * 1.8;
-      const x = home && i !== 0 ? s * 18.3 : s * 14;
-      // Keep each display item physically seated on its fixture: the HOME centre table
-      // is 46 cm high, its wall cabinets are 1.05 m high, and retail counters are 84 cm.
-      const displayY = home ? (i === 0 ? .46 : 1.07) : .84;
+      const slot = productDisplaySlot(st, i);
+      const { x, y: displayY, z } = slot;
       let obj: THREE.Object3D;
       const assetName = p.glb?.split('/').pop()?.replace('.glb', '') as AssetName;
-      if (p.image && hocoProductTextures.has(p)) {
-        const photoMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.05), new THREE.MeshBasicMaterial({ map: hocoProductTextures.get(p)!, toneMapped: false, side: THREE.DoubleSide }));
-        photoMesh.position.set(x, 1.25, z); photoMesh.rotation.y = -s * Math.PI / 2; group.add(photoMesh); obj = photoMesh;
-      } else if (ASSETS.includes(assetName)) {
+      if (ASSETS.includes(assetName)) {
         obj = furnishings.place(assetName, group, x, displayY, z, assetName === 'classic_laptop' ? .32 : .55);
       } else {
         // Use the item's actual silhouette on the fixture instead of a floating text
@@ -481,7 +501,8 @@ export async function buildMall(
         obj.position.set(x, displayY, z);
         group.add(obj);
       }
-      pickables.push({ product: p, obj, pos: new THREE.Vector3(x, 1.1, z) });
+      seatDisplayObject(obj, slot);
+      pickables.push({ product: p, obj, pos: new THREE.Vector3(x, displayY + .2, z) });
     });
   };
   STORES.forEach(buildStore);

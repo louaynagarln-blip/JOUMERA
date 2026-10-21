@@ -1,27 +1,19 @@
-npm install
-# Passed; dependencies already current. Environment emits a legacy http-proxy config warning.
+JOUMERA development verification — 2026-10-21
 
-npm run lint
-# tsc --noEmit: passed
+npm install: passed (existing npm http-proxy configuration warning).
+npm run lint: passed (tsc --noEmit).
+npm test: passed, 42 tests in 2 files.
+npm run build: passed (TypeScript and Vite 5.4.21).
 
-npm test
-# Vitest: 1 file, 35 tests passed.
-# Includes movement, collision, navigation, cart, HOCO store and display-only price/stock gating.
-# Store products without a GLB now render their product-specific 3D display silhouettes on store fixtures;
-# automated coverage confirms these meshes have visible bounds. Demo listings remain non-real inventory.
+New display checks cover rotated off-centre models seated on their surface,
+fixture footprint limits, HOME rear console coordinates, retail counter
+placement, invalid slots and portrait/landscape photograph aspect ratios.
 
-npm run build
-# tsc --noEmit && vite build: passed (Vite 5.4.21).
+HOCO now has three interactive counter photo terminals sharing the existing
+photograph textures with the rear wall displays. These are photo displays,
+not GLB models of HOCO products. Prices and stock remain unverified.
 
-Rendering and device verification:
-- Replaced the nearly transparent mall vault glazing with a bright frosted skylight material to avoid black panels on mobile WebGL implementations.
-- Touch auto quality pixel caps: low 1.35, medium 1.8, high 2.25; automatic mode starts at medium for touch devices.
-- The environment available to this run cannot render WebGL screenshots and no physical Android GPU/FPS test was performed.
-- Therefore the 3D visual result and frame rate on the user's device remain unverified.
-- The WebGL fallback catalogue now displays the three real HOCO photos and clearly marks unverified price/stock.
-
-HOCO product data:
-- Three owner-supplied HOCO product photos are integrated under public/assets/hoco/.
-- They are display-only: no confirmed sell prices, stock quantities, or product GLB models were supplied.
-- Cart addition is blocked for these unpriced/out-of-stock products; checkout remains gated.
-- The existing connected feed's unrelated bedding row is deliberately not mapped into the HOCO electronics showroom.
+Existing tests cover movement, collisions, navigation, cart and live-catalogue
+isolation. These are automated logic tests; they do not establish visual
+quality, real-device Android performance or complete backend acceptance.
+WebGL visual review and physical Android testing remain outstanding.
