@@ -375,6 +375,21 @@ export async function buildMall(
       for (const z of [st.zc - 2.7, st.zc + 2.7]) {
         furnishings.place('modern_arm_chair_01', group, s * 11.5, 0, z, 1.0, s * Math.PI / 2, colliders);
       }
+      // Interior campaign artwork is deliberately separate from the demo product catalog.
+      // It gives the lounge a focal point without presenting generated art as merchandise.
+      const campaignTexture = loader.load('/assets/campaign/home-gallery-living-room.webp');
+      campaignTexture.colorSpace = THREE.SRGBColorSpace;
+      campaignTexture.anisotropy = aniso;
+      extraDispose.push(campaignTexture);
+      box(...rx(19.66, 19.82), 0.72, 2.32, st.zc - 1.72, st.zc + 1.72, M.frame, false, false);
+      box(...rx(19.57, 19.64), 0.82, 2.22, st.zc - 1.62, st.zc + 1.62, brassMat, false, false);
+      const campaign = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.12, 1.3),
+        new THREE.MeshBasicMaterial({ map: campaignTexture, toneMapped: false, side: THREE.DoubleSide }),
+      );
+      campaign.position.set(s * 19.54, 1.52, st.zc);
+      campaign.rotation.y = -s * Math.PI / 2;
+      group.add(campaign);
     } else if (st.id === 'style-lab') {
       // Fitting lounge: no primitive capsule shapes presented as garments.
       furnishings.place('modern_arm_chair_01', group, s * 11.1, 0, st.zc - 3.2, .95, s * Math.PI / 2, colliders);
