@@ -7,6 +7,8 @@ npm run lint
 npm test
 # Vitest: 1 file, 35 tests passed.
 # Includes movement, collision, navigation, cart, HOCO store and display-only price/stock gating.
+# Store products without a GLB now render their product-specific 3D display silhouettes on store fixtures;
+# automated coverage confirms these meshes have visible bounds. Demo listings remain non-real inventory.
 
 npm run build
 # tsc --noEmit && vite build: passed (Vite 5.4.21).
