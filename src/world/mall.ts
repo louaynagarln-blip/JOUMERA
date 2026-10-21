@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {retailCounter} from './retailFixtures';
 import type { Box } from '../controls/collision';
 import { STORES, type Product, type StoreDef } from '../data/catalog';
 import { Furnishings, disposeObject, batchArchitecture, ASSETS, type AssetName } from './assets';
@@ -13,7 +14,7 @@ export interface Mall {
   update(t: number): void;
   dispose(): void;
 }
-export const STAGES = 11;
+export const STAGES = 13;
 
 function rng(seed: number) {
   return () => {
@@ -81,7 +82,7 @@ export async function buildMall(
   const aniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 
   const furnishings = new Furnishings();
-  await furnishings.load(async (done) => onStage(done, STAGES, `Loading licensed models ${done}/7`));
+  await furnishings.load(async (done) => onStage(done, STAGES, `Loading licensed models ${done}/9`));
   const loader = new THREE.TextureLoader();
   const [marbleBase, marbleNormal, marbleRough] = await Promise.all([
     loader.loadAsync('/assets/materials/marble_Diffuse.jpg'),
@@ -185,7 +186,7 @@ export async function buildMall(
   };
 
   // ---------- Stage 1: hall shell ----------
-  await onStage(8, STAGES, 'Architecture');
+  await onStage(10, STAGES, 'Architecture');
   plane(-20, 20, -36, 12, 0, marbleMat(20, 24));
   // The atrium roof is a shallow barrel vault: bronze ribs, glazed bays and recessed warm light rails.
   for (let z = 9; z >= -31; z -= 10) {
@@ -243,7 +244,7 @@ export async function buildMall(
   // A restrained two-ring chandelier gives the foyer a human-scale focal point.
   for (const [radius, tube, y] of [[1.65, 0.055, 5.35], [1.12, 0.035, 5.7]]) {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, tube, 8, 56), brassMat);
-    ring.position.set(0, y, 8.3); group.add(ring);
+    ring.rotation.x = -Math.PI / 2; ring.position.set(0, y, 8.3); group.add(ring);
   }
   const entryGlow = new THREE.PointLight(0xffdfb2, 30, 13, 2);
   entryGlow.position.set(0, 5.1, 8.3); group.add(entryGlow);
@@ -274,7 +275,7 @@ export async function buildMall(
   group.add(shafts, bases, capitals);
 
   // ---------- Stage 2: storefronts ----------
-  await onStage(9, STAGES, 'Storefronts');
+  await onStage(11, STAGES, 'Storefronts');
   for (const s of [-1, 1] as const) {
     const sx0 = s > 0 ? 8 : -8.25;
     const sx1 = s > 0 ? 8.25 : -8;
@@ -310,7 +311,7 @@ export async function buildMall(
   }
 
   // ---------- Stage 3: store interiors + products ----------
-  await onStage(10, STAGES, 'Store interiors');
+  await onStage(12, STAGES, 'Store interiors');
   const sun = new THREE.DirectionalLight(0xfff1dc, 1.3);
   sun.position.set(8, 24, 10);
   sun.target.position.set(0, 0, -12);
@@ -329,6 +330,11 @@ export async function buildMall(
     box(fx0, fx1, 0, 6, zf - 0.2, zf, M.wall, true);
     plane(fx0, fx1, zf, zn, 0.006, storeFloorMat(st.floor));
     box(fx0, fx1, 3.6, 3.7, zf, zn, M.ceil);
+    for (const edge of [zf+.22,zn-.22]) {
+      box(...rx(8.55,19.7),3.34,3.47,edge-.12,edge+.12,M.ceil,false,false);
+      box(...rx(8.65,19.6),3.43,3.46,edge-.035,edge+.035,M.led,false,false);
+    }
+    for (const depth of [8.55,19.7]) box(...rx(depth-.1,depth+.1),3.34,3.47,zf+.22,zn-.22,M.ceil,false,false);
     const [bx0, bx1] = rx(19.96, 20);
     box(bx0, bx1, 0, 3.6, zf, zn, std(st.accent, 0.56));
     // A fluted feature wall, bronze rails and halo-lit brand panel give each boutique a distinct back wall.
@@ -380,24 +386,15 @@ export async function buildMall(
         shelf.castShadow = true;
       }
     } else if (st.id === 'beauty-atelier') {
-      // Warm vanity mirrors, soft luminous surrounds and marble consultation counters.
-      for (const z of [st.zc - 2.45, st.zc + 2.45]) {
-        const mirrorBack = new THREE.Mesh(new THREE.CircleGeometry(.62, 40), std(0xc3d1ce, .1, .22));
-        mirrorBack.position.set(s * 19.78, 2.2, z); mirrorBack.rotation.y = -s * Math.PI / 2; group.add(mirrorBack);
-        const halo = new THREE.Mesh(new THREE.TorusGeometry(.68, .045, 8, 48), led);
-        halo.position.set(s * 19.72, 2.2, z); halo.rotation.y = -s * Math.PI / 2; group.add(halo);
-      }
+      for (const z of [st.zc-2.6,st.zc+2.6]) furnishings.place('ornate_mirror_01',group,s*19.48,1.35,z,1.5,-s*Math.PI/2);
     }
 
-    // Curated display niches replace the repeated low-detail merchandise silhouettes.
-    const [sh0, sh1] = rx(18.9, 19.9);
-    colliders.push({ minX: sh0, maxX: sh1, minZ: st.zc - 4, maxZ: st.zc + 4 });
-    for (const z of [st.zc - 2.8, st.zc + 2.8]) {
-      box(sh0, sh1, .65, .72, z - .8, z + .8, woodMat);
-      box(sh0, sh1, 1.75, 1.82, z - .8, z + .8, woodMat);
-      furnishings.place('ceramic_vase_03', group, s * 19.35, .72, z, .62);
-      furnishings.place('ceramic_vase_03', group, s * 19.35, 1.82, z + .3, .44);
+    // Real cabinet joinery replaces the identical procedural shelf stacks.
+    for (const z of [st.zc-2.8,st.zc+2.8]) {
+      furnishings.place('modern_wooden_cabinet',group,s*18.8,0,z,1.05,-s*Math.PI/2,colliders);
+      if(st.id==='home-gallery') furnishings.place('ceramic_vase_03',group,s*18.8,1.07,z,.5);
     }
+    if(st.id==='style-lab') furnishings.place('ornate_mirror_01',group,s*19.45,.2,st.zc,2.4,-s*Math.PI/2);
     furnishings.place('modern_ceiling_lamp_01', group, s * 14, 2.65, st.zc, .8);
     furnishings.place('potted_plant_02', group, s * 17.5, 0, st.zc + 3.6, 1.35, 0, colliders);
 
@@ -405,13 +402,13 @@ export async function buildMall(
       furnishings.place('sofa_03', group, s * 17, 0, st.zc, .85, s * Math.PI / 2, colliders);
       furnishings.place('modern_coffee_table_01', group, s * 14, 0, st.zc, .45, 0, colliders);
     } else {
-    // display table
-    const islandBase = new THREE.Mesh(new THREE.CylinderGeometry(3.45, 3.25, .72, 48), M.dark);
-    islandBase.scale.x = .36; islandBase.position.set(s * 14, .38, st.zc); islandBase.castShadow = islandBase.receiveShadow = true; group.add(islandBase);
-    const islandTop = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, .08, 48), M.stone);
-    islandTop.scale.x = .36; islandTop.position.set(s * 14, .78, st.zc); islandTop.castShadow = islandTop.receiveShadow = true; group.add(islandTop);
-    const [t0, t1] = rx(12.7, 15.3);
-    colliders.push({ minX: t0, maxX: t1, minZ: st.zc - 3.55, maxZ: st.zc + 3.55 });
+      // Distinct, walk-around joinery: technology demo pods, a beauty bar and fashion plinths.
+      const positions=st.id==='beauty-atelier'?[st.zc]:[st.zc-2.05,st.zc+2.05];
+      const width=st.id==='tech-studio'?1.7:st.id==='style-lab'?1.05:1.35;
+      const length=st.id==='beauty-atelier'?5.8:2.8;
+      for(const z of positions) retailCounter(group,colliders,s*14,z,width,length,.84,
+        st.id==='tech-studio'?M.stone:st.id==='beauty-atelier'?std(0xb78d82,.5):woodMat,
+        st.id==='style-lab'?M.dark:M.stone,brassMat);
     }
     // counter
     const [c0, c1] = rx(10, 10.8);
@@ -436,7 +433,7 @@ export async function buildMall(
   STORES.forEach(buildStore);
 
   // ---------- Stage 4: hall furniture ----------
-  await onStage(11, STAGES, 'Furnishing');
+  await onStage(13, STAGES, 'Furnishing');
   const plant = (x: number, z: number, sc: number) => {
     furnishings.place('potted_plant_02', group, x, z === -17 ? .5 : 0, z, sc * 1.3, 0, colliders);
   };

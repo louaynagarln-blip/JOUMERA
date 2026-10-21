@@ -56,6 +56,22 @@
       "bytes": 132008,
       "triangles": 6600,
       "license": "CC0-1.0"
+    },
+    {
+      "id": "modern_wooden_cabinet",
+      "status": "bundled",
+      "path": "/assets/models/modern_wooden_cabinet.glb",
+      "bytes": 243152,
+      "triangles": 12534,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "ornate_mirror_01",
+      "status": "bundled",
+      "path": "/assets/models/ornate_mirror_01.glb",
+      "bytes": 84680,
+      "triangles": 4273,
+      "license": "CC0-1.0"
     }
   ],
   "textures": [

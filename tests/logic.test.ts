@@ -149,3 +149,30 @@ describe('live catalogue boundary', () => {
     }
   });
 });
+
+import {nextOrderStates,escapeHTML} from '../src/operations';
+describe('management operations',()=>{
+ it('offers only permitted lifecycle actions and keeps terminal orders closed',()=>{
+  expect(nextOrderStates('new')).toEqual(['confirmed','cancelled']);
+  expect(nextOrderStates('confirmed')).toEqual(['out_for_delivery','cancelled']);
+  expect(nextOrderStates('out_for_delivery')).toEqual(['delivered','cancelled']);
+  expect(nextOrderStates('delivered')).toEqual([]);expect(nextOrderStates('cancelled')).toEqual([]);
+ });
+ it('escapes supplier and customer text before rendering HTML',()=>{
+  expect(escapeHTML('<img src=x onerror="bad">')).toBe('&lt;img src=x onerror=&quot;bad&quot;&gt;');
+  expect(escapeHTML(null)).toBe('');
+ });
+});
+
+import * as THREE from 'three';
+import {retailCounter} from '../src/world/retailFixtures';
+describe('retail furnishing clearance',()=>{
+ it('keeps the bevelled joinery inside its collision envelope',()=>{
+  const group=new THREE.Group();const boxes:Array<{minX:number;maxX:number;minZ:number;maxZ:number}>=[];
+  const mat=new THREE.MeshStandardMaterial();retailCounter(group,boxes,14,-2,1.7,2.8,.84,mat,mat,mat);
+  const b=new THREE.Box3().setFromObject(group), c=boxes[0];
+  expect(b.min.x).toBeGreaterThanOrEqual(c.minX-.001);expect(b.max.x).toBeLessThanOrEqual(c.maxX+.001);
+  expect(b.min.z).toBeGreaterThanOrEqual(c.minZ-.001);expect(b.max.z).toBeLessThanOrEqual(c.maxZ+.001);
+  expect(b.max.y).toBeCloseTo(.842,2);
+ });
+});

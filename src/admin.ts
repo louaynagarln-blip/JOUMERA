@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import './admin.css';
+import { renderOperations } from './adminOperations';
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const key = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY) as string | undefined;
@@ -48,6 +49,11 @@ async function loadWorkspace() {
   const { data, error } = await sb.rpc('vmall_my_profile');
   if (error) { message('workspace-message', error.message, true); return; }
   const profile = (data?.[0] ?? {}) as Profile; currentRole = profile.role ?? 'customer';
+  document.getElementById('operations-view')?.remove();
+  if (currentRole === 'vendor' || currentRole === 'super_admin') {
+    const operations=document.createElement('section');operations.id='operations-view';workspace.appendChild(operations);
+    await renderOperations(sb,operations,currentRole);
+  }
   if (currentRole === 'vendor') {
     $('workspace-message').textContent = profile.store_name ? `Store: ${profile.store_name}` : 'Vendor access';
     setHidden('vendor-view', false); setHidden('admin-view', true); await loadVendorProducts();

@@ -14,3 +14,9 @@ Seven actual Poly Haven models and one three-map PBR marble set are included in 
 These are decorative or explicitly labelled demonstration assets, not supplier-verified sellable inventory. No website example renders or product photography were copied. The architecture remains custom procedural geometry; no complete professionally authored mall environment is supplied.
 
 `PROVENANCE.json` records source download URLs, source MD5/size checks, final SHA256, triangle counts and exact optimisation options. Models are self-contained GLB with Meshopt geometry and embedded 512px WebP textures. WebP reduces download size, not GPU texture memory; KTX2/Basis compression and baked lighting have not been implemented.
+
+Additional integrated CC0 models (2026-10-21):
+- modern_wooden_cabinet: actual shop cabinet joinery; closed static pose; normal map uses the published PNG instead of a truncated source JPEG.
+- ornate_mirror_01: framed mirrors in STYLE LAB and BEAUTY ATELIER.
+
+The import pipeline is reproducible with `python scripts/import-polyhaven.py modern_wooden_cabinet ornate_mirror_01` (requires curl, Python and npx). It verifies source bytes before optimisation.

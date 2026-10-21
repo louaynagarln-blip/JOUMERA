@@ -296,6 +296,88 @@
         "md5": "27f31e0500c2dd83a21fd3339ade7821"
       },
       "pipeline": "gltf-transform 4.2.1 optimize --compress meshopt --texture-compress webp --texture-size 512 --simplify-ratio 0.65 --simplify-error 0.0005"
+    },
+    {
+      "id": "modern_wooden_cabinet",
+      "source": "https://polyhaven.com/a/modern_wooden_cabinet",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "path": "assets/models/modern_wooden_cabinet.glb",
+      "bytes": 243152,
+      "sha256": "233fd5b0fa9bea7face6fe929acbc3715a8c0282d6d6a9d613aa5a51a9286b90",
+      "triangles": 12534,
+      "source_gltf": {
+        "include": {
+          "modern_wooden_cabinet.bin": {
+            "size": 1170136,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/modern_wooden_cabinet/modern_wooden_cabinet.bin",
+            "md5": "0a619e6311e6b04b92e9f226f3d0978d"
+          },
+          "textures/modern_wooden_cabinet_nor_gl_1k.jpg": {
+            "size": 430053,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modern_wooden_cabinet/modern_wooden_cabinet_nor_gl_1k.jpg",
+            "md5": "62477103e44ac1b2746c9bb201f89e06"
+          },
+          "textures/modern_wooden_cabinet_arm_1k.jpg": {
+            "size": 574020,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modern_wooden_cabinet/modern_wooden_cabinet_arm_1k.jpg",
+            "md5": "bb821c89979d89ce2421df13af67fb07"
+          },
+          "textures/modern_wooden_cabinet_diff_1k.jpg": {
+            "size": 670353,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/modern_wooden_cabinet/modern_wooden_cabinet_diff_1k.jpg",
+            "md5": "9c7e897741dd9aea6382f04e710d739b"
+          }
+        },
+        "size": 10960,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/modern_wooden_cabinet/modern_wooden_cabinet_1k.gltf",
+        "md5": "623406579e948eb75ff52ec1498085c8"
+      },
+      "pipeline": "gltf-transform 4.2.1 optimize --compress meshopt --texture-compress webp --texture-size 512 --simplify-ratio 0.3 --simplify-error 0.001",
+      "normal_override": {
+        "size": 4547048,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/1k/modern_wooden_cabinet/modern_wooden_cabinet_nor_gl_1k.png",
+        "md5": "3484103aa6a2ad1e29b11ce2bc2adbf8"
+      },
+      "note": "Published JPEG normal is truncated; checksum-verified PNG normal used instead. Cabinet animation is not played."
+    },
+    {
+      "id": "ornate_mirror_01",
+      "source": "https://polyhaven.com/a/ornate_mirror_01",
+      "license": "CC0-1.0",
+      "license_url": "https://polyhaven.com/license",
+      "path": "assets/models/ornate_mirror_01.glb",
+      "bytes": 84680,
+      "sha256": "078c6716e858f478b4bde4d6162e44c7e644b4d21f2de542e577e27192b269af",
+      "triangles": 4273,
+      "source_gltf": {
+        "include": {
+          "textures/ornate_mirror_01_arm_1k.jpg": {
+            "size": 126947,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ornate_mirror_01/ornate_mirror_01_arm_1k.jpg",
+            "md5": "0e7d993bec7cc5913bf73f51821b09ad"
+          },
+          "ornate_mirror_01.bin": {
+            "size": 372772,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/ornate_mirror_01/ornate_mirror_01.bin",
+            "md5": "0be4cf0dda17d51c4a279ce4912b1b3f"
+          },
+          "textures/ornate_mirror_01_diff_1k.jpg": {
+            "size": 115752,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ornate_mirror_01/ornate_mirror_01_diff_1k.jpg",
+            "md5": "d2103c8f1e72c86d7911a06da6161cd1"
+          },
+          "textures/ornate_mirror_01_nor_gl_1k.jpg": {
+            "size": 59073,
+            "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/ornate_mirror_01/ornate_mirror_01_nor_gl_1k.jpg",
+            "md5": "bea34985dd1cc0d3dd20478df6b1e7b3"
+          }
+        },
+        "size": 2697,
+        "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/ornate_mirror_01/ornate_mirror_01_1k.gltf",
+        "md5": "834501c79f6045083367606fd8f30c9f"
+      },
+      "pipeline": "gltf-transform 4.2.1 optimize --compress meshopt --texture-compress webp --texture-size 512 --simplify-ratio 0.3 --simplify-error 0.001"
     }
   ],
   "material": {

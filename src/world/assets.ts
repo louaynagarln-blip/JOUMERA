@@ -4,12 +4,13 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import type { Box } from '../controls/collision';
 
-export const ASSETS = ['modern_arm_chair_01', 'ceramic_vase_03', 'potted_plant_02', 'modern_ceiling_lamp_01', 'classic_laptop', 'sofa_03', 'modern_coffee_table_01'] as const;
+export const ASSETS = ['modern_arm_chair_01', 'ceramic_vase_03', 'potted_plant_02', 'modern_ceiling_lamp_01', 'classic_laptop', 'sofa_03', 'modern_coffee_table_01', 'modern_wooden_cabinet', 'ornate_mirror_01'] as const;
 export type AssetName = typeof ASSETS[number];
 
 /** One decoded resource set per asset; placements share geometry, textures and materials. */
 export class Furnishings {
   private models = new Map<AssetName, THREE.Group>();
+  private contactShadow: THREE.Texture | null = null;
   async load(progress: (done: number, total: number) => Promise<void>): Promise<void> {
     const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
     // Sequential decoding bounds peak memory on mobile and reports real completed files.
@@ -40,6 +41,17 @@ export class Furnishings {
     if (colliders) {
       const b = new THREE.Box3().setFromObject(pivot);
       colliders.push({ minX: b.min.x, maxX: b.max.x, minZ: b.min.z, maxZ: b.max.z });
+    }
+    if(colliders){
+      if(!this.contactShadow){
+        const canvas=document.createElement('canvas');canvas.width=canvas.height=128;
+        const ctx=canvas.getContext('2d')!;const gradient=ctx.createRadialGradient(64,64,12,64,64,64);
+        gradient.addColorStop(0,'rgba(0,0,0,.5)');gradient.addColorStop(.55,'rgba(0,0,0,.24)');gradient.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=gradient;ctx.fillRect(0,0,128,128);this.contactShadow=new THREE.CanvasTexture(canvas);
+      }
+      const bounds=new THREE.Box3().setFromObject(pivot);const extent=bounds.getSize(new THREE.Vector3());
+      const shadow=new THREE.Mesh(new THREE.PlaneGeometry(extent.x*1.18,extent.z*1.18),new THREE.MeshBasicMaterial({map:this.contactShadow,transparent:true,depthWrite:false,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-1}));
+      shadow.rotation.x=-Math.PI/2;shadow.position.set(x,y+.012,z);parent.add(shadow);
     }
     // Detailed furnishings are omitted beyond 36 m; architecture remains visible.
     const lod = new THREE.LOD(); pivot.remove(obj); lod.addLevel(obj, 0); lod.addLevel(new THREE.Group(), 36); pivot.add(lod);
