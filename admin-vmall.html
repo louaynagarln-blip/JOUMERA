@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#171512" />
+  <title>JOUMERA V-MALL — Management</title>
+</head>
+<body class="admin-body">
+  <main id="admin-app" class="admin-shell">
+    <header class="admin-head"><a href="/" class="admin-brand">JOUMERA <span>V-MALL</span></a><div id="session-slot"></div></header>
+    <section class="admin-intro"><p class="eyebrow">SECURE WORKSPACE</p><h1>Store management</h1><p>Vendor submissions and retail prices stay separate. Customer checkout is currently disabled.</p></section>
+    <section id="auth-card" class="admin-card auth-card">
+      <h2>Sign in</h2><p>Use an account invited by the V-Mall administrator.</p>
+      <form id="login-form"><label>Email<input id="login-email" type="email" autocomplete="username" required /></label><label>Password<input id="login-password" type="password" autocomplete="current-password" required /></label><button class="admin-button primary" type="submit">Sign in</button><p id="auth-message" class="notice" role="status"></p></form>
+    </section>
+    <section id="workspace" class="hidden">
+      <div id="workspace-message" class="notice"></div>
+      <section id="vendor-view" class="hidden">
+        <div class="section-head"><div><p class="eyebrow">VENDOR</p><h2>Your products</h2></div><button id="new-product" class="admin-button">Add product</button></div>
+        <form id="product-form" class="admin-card product-form hidden">
+          <input id="product-id" type="hidden" />
+          <div class="form-grid"><label>Slug<input id="product-slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="my-product" /></label><label>English name<input id="product-name" required maxlength="160" /></label><label>Arabic name<input id="product-name-ar" maxlength="160" /></label><label>Wholesale price<input id="product-wholesale" type="number" min="0" step="0.01" required /></label><label>Stock<input id="product-stock" type="number" min="0" max="100000" step="1" required /></label><label>Image URL or storage path<input id="product-image" maxlength="500" /></label><label>3D model URL or storage path<input id="product-model" maxlength="500" /></label><label class="wide">Description<input id="product-description" maxlength="4000" /></label><label class="wide">Description (Arabic)<input id="product-description-ar" maxlength="4000" /></label></div>
+          <p class="hint">Submitted changes require administrator review. Retail prices are set by the administrator.</p><div class="actions"><button class="admin-button primary" type="submit">Submit for review</button><button id="cancel-product" class="admin-button" type="button">Cancel</button></div><p id="product-message" class="notice" role="status"></p>
+        </form>
+        <div id="vendor-products" class="product-list"></div>
+      </section>
+      <section id="admin-view" class="hidden">
+        <div class="section-head"><div><p class="eyebrow">SUPER ADMIN</p><h2>Review and access</h2></div><button id="refresh-admin" class="admin-button">Refresh</button></div>
+        <div class="admin-card"><h3>Product submissions</h3><div id="admin-products" class="table-scroll"></div></div>
+        <div class="admin-card"><h3>Existing accounts</h3><p>Assign a vendor or admin role only to a verified account. Vendor store ownership is attached below.</p><div id="admin-users" class="table-scroll"></div></div>
+        <form id="store-form" class="admin-card"><h3>Create store</h3><div class="form-grid"><label>Store slug<input id="store-slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" /></label><label>Name<input id="store-name" required maxlength="100" /></label><label>Arabic name<input id="store-name-ar" maxlength="100" /></label><label>Vendor user ID<input id="store-owner" required /></label></div><button class="admin-button primary" type="submit">Create store</button><p id="store-message" class="notice" role="status"></p></form>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="/src/admin.ts"></script>
+</body>
+</html>
