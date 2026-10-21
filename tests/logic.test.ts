@@ -3,6 +3,7 @@ import { resolveCircle } from '../src/controls/collision';
 import { NavGrid } from '../src/controls/nav';
 import { approach, approachAngle, shapeStick } from '../src/controls/motion';
 import { addLine, setQty, totalCents, MAX_QTY } from '../src/cart';
+import { searchProducts, searchStores } from '../src/data/search';
 
 const wall = { minX: -1, maxX: 1, minZ: -0.1, maxZ: 0.1 };
 
@@ -61,5 +62,20 @@ describe('cart', () => {
   it('totals in integer cents and skips unpriced items', () => {
     const l = addLine(addLine([], 'a', '', 3), 'b', '', 1);
     expect(totalCents(l, (s) => (s === 'a' ? 19.99 : null))).toBe(5997);
+  });
+});
+
+describe('catalog search', () => {
+  it('finds products in Arabic and English', () => {
+    expect(searchProducts('حاسوب').some((hit) => hit.product.slug === 'demo-laptop-14')).toBe(true);
+    expect(searchProducts('portable speaker').some((hit) => hit.product.slug === 'demo-speaker-portable')).toBe(true);
+  });
+  it('finds a store by its localized tagline and exposes its products', () => {
+    expect(searchStores('إلكترونيات')[0]?.id).toBe('tech-studio');
+    expect(searchProducts('tech studio')).toHaveLength(4);
+  });
+  it('returns no results for blank or unrelated text', () => {
+    expect(searchProducts('   ')).toHaveLength(0);
+    expect(searchProducts('unlisted product')).toHaveLength(0);
   });
 });

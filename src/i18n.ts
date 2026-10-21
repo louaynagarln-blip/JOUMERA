@@ -3,6 +3,7 @@ import type { Lang, L10n } from './data/catalog';
 const D: Record<Lang, Record<string, string>> = {
   en: {
     loading: 'Preparing the mall', enter: 'ENTER JOUMERA', stores: 'Stores', cart: 'Cart', settings: 'Settings', close: 'Close',
+    search: 'Search', searchPlaceholder: 'Search products or stores', searchHint: 'Search by product or store name', searchProducts: 'Products', searchStores: 'Stores', noResults: 'No matching products or stores.',
     tutTitle: 'Welcome to JOUMERA',
     tutBody: 'Touch: drag the left pad to walk, drag anywhere on the right to look. Desktop: click to look around, WASD to walk, E to interact, Esc to release the mouse.',
     dontShow: "Don't show again", start: 'Start exploring', interact: 'View product', addToCart: 'Add to cart',
@@ -19,6 +20,7 @@ const D: Record<Lang, Record<string, string>> = {
   },
   ar: {
     loading: 'جارٍ تجهيز المول', enter: 'ادخل إلى جوميرا', stores: 'المتاجر', cart: 'السلة', settings: 'الإعدادات', close: 'إغلاق',
+    search: 'بحث', searchPlaceholder: 'ابحث عن منتج أو متجر', searchHint: 'اكتب اسم المنتج أو المتجر', searchProducts: 'المنتجات', searchStores: 'المتاجر', noResults: 'لا توجد منتجات أو متاجر مطابقة.',
     tutTitle: 'أهلاً بك في جوميرا',
     tutBody: 'باللمس: اسحب اللوحة اليسرى للمشي واسحب في أي مكان على اليمين للنظر. على الحاسوب: انقر للنظر، WASD للمشي، E للتفاعل، Esc لتحرير الماوس.',
     dontShow: 'لا تُظهر مجدداً', start: 'ابدأ الاستكشاف', interact: 'عرض المنتج', addToCart: 'أضف إلى السلة',

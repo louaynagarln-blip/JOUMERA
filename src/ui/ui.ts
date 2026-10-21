@@ -3,6 +3,7 @@ import { STORES, ALL_PRODUCTS, findProduct, type Product, type StoreDef } from '
 import { cart } from '../state';
 import { totalCents } from '../cart';
 import { ProductViewer, type ViewerStatus } from './viewer';
+import { searchProducts, searchStores } from '../data/search';
 import { isLive, placeOrder } from '../api/backend';
 import type { Settings } from '../settings';
 
@@ -20,6 +21,7 @@ export const hooks = {
 };
 
 let settings: Settings;
+let checkoutReady = false;
 let viewer: ProductViewer | null = null;
 let interactTarget: Product | null = null;
 const openOverlays = new Set<string>();
@@ -43,6 +45,10 @@ export function toast(msg: string): void {
 export function setProgress(f: number, label: string): void {
   $('bar').style.width = `${Math.round(f * 100)}%`;
   $('load-label').textContent = label;
+}
+export function setCheckoutReady(ready: boolean): void {
+  checkoutReady = isLive && ready;
+  renderCart();
 }
 export function showEnter(): void {
   $('load-label').textContent = '';
@@ -74,6 +80,45 @@ export const triggerInteract = () => { if (interactTarget) openProduct(interactT
 
 function statusText(s: ViewerStatus): string {
   return s === 'loading' ? t('modelLoading') : s === 'placeholder' ? t('modelPlaceholder') : s === 'error' ? t('modelError') : '';
+}
+
+function renderSearchResults(query: string): string {
+  const products = searchProducts(query);
+  const stores = searchStores(query);
+  if (!query.trim()) return `<p class="search-hint">${t('searchHint')}</p>`;
+  const productRows = products.map(({ product, store }) => `<button class="menu-item" data-search-product="${esc(product.slug)}"><span><b>${esc(pick(product.name))}</b><small>${esc(store.name)} · ${product.demo ? t('demoPrice') : product.priceUSD == null ? t('priceUnavailable') : money(Math.round(product.priceUSD * 100))}</small></span><span>›</span></button>`).join('');
+  const storeRows = stores.map((store) => `<button class="menu-item" data-search-store="${esc(store.id)}"><span><b>${esc(store.name)}</b><small>${esc(pick(store.tagline))}</small></span><span>${t('walkTo')} ›</span></button>`).join('');
+  return `${products.length ? `<h3>${t('searchProducts')}</h3>${productRows}` : ''}${stores.length ? `<h3>${t('searchStores')}</h3>${storeRows}` : ''}${products.length || stores.length ? '' : `<p>${t('noResults')}</p>`}`;
+}
+
+export function openSearch(): void {
+  const el = $('search-modal');
+  el.innerHTML = `<div class="card search-card"><button class="x" data-close aria-label="${t('close')}">&times;</button><h2>${t('search')}</h2><input id="search-input" type="search" autocomplete="off" placeholder="${t('searchPlaceholder')}" aria-label="${t('searchPlaceholder')}"><div id="search-results" aria-live="polite">${renderSearchResults('')}</div></div>`;
+  show('search-modal');
+  const input = $('search-input') as HTMLInputElement;
+  input.addEventListener('input', () => { $('search-results').innerHTML = renderSearchResults(input.value); });
+  requestAnimationFrame(() => input.focus());
+  el.onclick = (event) => {
+    const target = event.target as HTMLElement;
+    if (target === el || target.hasAttribute('data-close')) { hide('search-modal'); return; }
+    const productButton = target.closest<HTMLElement>('[data-search-product]');
+    if (productButton) {
+      const product = findProduct(productButton.dataset.searchProduct!);
+      hide('search-modal'); if (product) openProduct(product); return;
+    }
+    const storeButton = target.closest<HTMLElement>('[data-search-store]');
+    if (storeButton) {
+      const id = storeButton.dataset.searchStore!;
+      hide('search-modal');
+      if ($('fallback').classList.contains('hidden')) hooks.onWalkTo(id);
+      else {
+        const storeName = STORES.find((store) => store.id === id)?.name;
+        $('fallback').querySelectorAll('h3').forEach((heading) => {
+          if (heading.textContent === storeName) heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+    }
+  };
 }
 
 export function openProduct(p: Product): void {
@@ -121,12 +166,12 @@ function renderCart(): void {
   const form = lines.length ? `
     <h3 style="margin-top:1rem">${t('checkout')}</h3>
     <div class="row"><span>${t('total')}</span><b>${money(totalCents(lines, priceOf))}</b></div>
-    ${isLive ? '' : `<div class="note">${t('demoCheckout')}</div>`}
+    ${checkoutReady ? '' : `<div class="note">${t('demoCheckout')}</div>`}
     <input id="c-name" autocomplete="name" placeholder="${t('name')}" />
     <input id="c-phone" autocomplete="tel" inputmode="tel" placeholder="${t('phone')}" />
     <textarea id="c-addr" rows="2" placeholder="${t('address')}"></textarea>
     <textarea id="c-notes" rows="2" placeholder="${t('notes')}"></textarea>
-    <button id="c-go" class="primary" style="width:100%;margin-top:.6rem" ${isLive ? '' : 'disabled'}>${t('placeOrder')}</button>` : '';
+    <button id="c-go" class="primary" style="width:100%;margin-top:.6rem" ${checkoutReady ? '' : 'disabled'}>${t('placeOrder')}</button>` : '';
   const d = $('drawer');
   // preserve typed values across re-render
   const keep = ['c-name', 'c-phone', 'c-addr', 'c-notes'].map((id) => (document.getElementById(id) as HTMLInputElement | null)?.value ?? '');
@@ -209,10 +254,12 @@ export function showFallback(reason: string): void {
   f.classList.remove('hidden');
   f.innerHTML = `<div class="logo" style="font-size:1.6rem;text-align:center">JOUMERA</div>
     <h2 style="font-family:Georgia,serif;font-weight:500">${t('fallbackTitle')}</h2><p>${t('fallbackBody')}</p><p><small>${esc(reason)}</small></p>
-    <p><button class="ghost" id="fb-cart">${t('cart')}</button> <button class="ghost" id="fb-set">${t('settings')}</button></p>
-    ${STORES.map((s) => `<h3 style="font-family:Georgia,serif;letter-spacing:.15em;color:var(--champ)">${esc(s.name)}</h3><div class="grid">${s.products.map((p) => `<div class="pcard"><b>${esc(pick(p.name))}</b><br><small>${p.priceUSD != null && p.available ? money(Math.round(p.priceUSD * 100)) : t('priceUnavailable')}</small><br><button class="ghost" data-p="${p.slug}" style="margin-top:.5rem">${t('interact')}</button></div>`).join('')}</div>`).join('')}`;
+    <p><button class="ghost" id="fb-search">${t('search')}</button> <button class="ghost" id="fb-cart">${t('cart')}</button> <button class="ghost" id="fb-set">${t('settings')}</button></p>
+    ${STORES.map((s) => `<h3 style="font-family:Georgia,serif;letter-spacing:.15em;color:var(--champ)">${esc(s.name)}</h3><div class="grid">${s.products.map((p) => `<div class="pcard"><b>${esc(pick(p.name))}</b><br><small>${p.demo ? t('demoPrice') : p.priceUSD != null && p.available ? money(Math.round(p.priceUSD * 100)) : t('priceUnavailable')}</small><br><button class="ghost" data-p="${p.slug}" style="margin-top:.5rem">${t('interact')}</button></div>`).join('')}</div>`).join('')}`;
   f.onclick = (e) => {
     const tg = e.target as HTMLElement;
+    if (tg.id === 'fb-search') openSearch();
+    if (tg.id === 'fb-search') openSearch();
     if (tg.id === 'fb-cart') openCart();
     if (tg.id === 'fb-set') openSettings();
     if (tg.dataset.p) { const p = findProduct(tg.dataset.p); if (p) openProduct(p); }
@@ -234,6 +281,7 @@ export function initUI(s: Settings): void {
   $('enter').onclick = () => hooks.onEnter();
   $('lang-intro').onclick = () => setLang(getLang() === 'ar' ? 'en' : 'ar');
   $('btn-stores').onclick = openStores;
+  $('btn-search').onclick = openSearch;
   $('btn-cart').onclick = openCart;
   $('btn-settings').onclick = openSettings;
   $('interact').onclick = triggerInteract;

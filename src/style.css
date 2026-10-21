@@ -35,6 +35,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .overlay{position:fixed;inset:0;z-index:30;background:#000a;display:flex;align-items:center;justify-content:center;padding:calc(var(--safe-t) + 12px) 12px calc(var(--safe-b) + 12px)}
 .card{position:relative;background:var(--ink2);border:1px solid #fff2;border-radius:18px;padding:1.4rem;width:min(460px,100%);max-height:100%;overflow:auto;user-select:text}
 .card h2,.card h3{font-family:Georgia,serif;margin:.1rem 0 .6rem;font-weight:500}
+.search-card{width:min(520px,100%)}#search-input{width:100%;min-height:48px;margin:.3rem 0 .8rem;padding:.7rem .85rem;border:1px solid #fff3;border-radius:12px;background:#0006;color:var(--warm);font:inherit;user-select:text}.search-card h3{margin:1rem 0 .3rem;color:var(--champ);font-size:.9rem}.search-hint{padding:.6rem 0}
 .card p{color:var(--stone);line-height:1.5}
 .check{display:flex;gap:.5rem;align-items:center;margin:.8rem 0;color:var(--stone)}
 .x{position:absolute;top:8px;inset-inline-end:12px;background:none;border:0;font-size:1.6rem;z-index:2}

@@ -47,6 +47,7 @@ async function boot(): Promise<void> {
 
   // live catalogue (only when Supabase is configured); otherwise demo data stays flagged as demo
   let liveNote = false;
+  ui.setCheckoutReady(false);
   if (isLive) {
     try {
       const rows = await fetchLiveCatalog();
@@ -57,7 +58,8 @@ async function boot(): Promise<void> {
         p.priceUSD = r ? r.retail_price : null;
         p.available = Boolean(r && r.in_stock);
       }
-    } catch { liveNote = true; }
+      ui.setCheckoutReady(rows.length > 0);
+    } catch { liveNote = true; ui.setCheckoutReady(false); }
   }
 
   let mall: Mall;
