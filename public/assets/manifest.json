@@ -1,0 +1,12 @@
+{
+  "note": "No binary assets are bundled. Everything marked missing must be supplied and licensed by the project owner.",
+  "textures": [
+    { "id": "floor-marble", "target": "hall floor", "status": "procedural-placeholder", "spec": "PBR set (albedo, normal, roughness) KTX2/Basis, 2048px, tileable ~2m", "license": "CC0 (e.g. ambientCG/Poly Haven) or purchased" }
+  ],
+  "models": [
+    { "id": "mall-shell", "status": "missing", "spec": "Optional GLB replacing procedural architecture; Meshopt-compressed; baked lightmap in UV2" },
+    { "id": "store-fixtures", "status": "missing", "spec": "Shelves, counters, benches, plants as GLB, instanced by the loader; < 20k tris each" },
+    { "id": "product-models", "status": "missing", "spec": "~10 vendor GLBs, Meshopt compressed, <= 5 MB each, <= 50k tris, 1 unit = 1 metre, base on y=0", "path": "set Product.glb to /assets/models/<file>.glb" }
+  ],
+  "hdri": [{ "id": "environment", "status": "using three.js RoomEnvironment", "spec": "Optional neutral interior HDR (EXR/HDR -> PMREM)" }]
+}
