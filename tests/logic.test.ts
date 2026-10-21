@@ -79,3 +79,73 @@ describe('catalog search', () => {
     expect(searchProducts('unlisted product')).toHaveLength(0);
   });
 });
+
+import { moveCircle } from '../src/controls/collision';
+import { Player } from '../src/controls/player';
+
+describe('walking acceptance', () => {
+  it('does not tunnel through thin glass during a delayed frame', () => {
+    const p = moveCircle(0, 2, 0, -4, .3, [wall]);
+    expect(p.z).toBeGreaterThanOrEqual(.4 - 1e-6);
+  });
+  it('slides along a wall while retaining clearance', () => {
+    const p = moveCircle(-.7, .45, 1.1, -.5, .3, [wall]);
+    expect(p.x).toBeGreaterThan(.3);
+    expect(p.z).toBeGreaterThanOrEqual(.4 - 1e-6);
+  });
+  it('fits through a 1.4m doorway without snagging', () => {
+    const walls = [{minX:-4,maxX:-.7,minZ:-.1,maxZ:.1},{minX:.7,maxX:4,minZ:-.1,maxZ:.1}];
+    expect(moveCircle(0,2,0,-4,.3,walls)).toEqual({x:0,z:expect.closeTo(-2,6)});
+  });
+  it('produces consistent walking distance at 10 and 60 FPS', () => {
+    const run = (fps: number) => {
+      const p = new Player([]); p.enabled = true; p.walkPath([{x:0,z:-20}]);
+      for (let i=0;i<fps*3;i++) p.update(1/fps);
+      return p.z;
+    };
+    expect(run(10)).toBeCloseTo(run(60), 4);
+  });
+  it('cancels navigation without residual movement and keeps eye height', () => {
+    const p = new Player([]); p.enabled = true; p.walkPath([{x:0,z:-20}]);
+    p.update(.2); p.cancelPath(); const z=p.z; p.update(.2);
+    expect(p.z).toBe(z); expect(p.camera.position.y).toBe(1.65);
+  });
+  it('rejects routes beyond the mall and keeps same-cell destinations', () => {
+    const nav = new NavGrid([], {minX:-2,maxX:2,minZ:-2,maxZ:2});
+    expect(nav.isFree(20,0)).toBe(false);
+    expect(nav.findPath(0,0,20,0)).toBeNull();
+    expect(nav.findPath(.1,.1,.2,.2)).toEqual([{x:.2,z:.2}]);
+  });
+  it('discards tab suspension gaps instead of teleporting', () => {
+    const p = new Player([]); p.enabled = true; p.walkPath([{x:0,z:-20}]); p.update(30);
+    expect(9-p.z).toBeLessThan(.32);
+  });
+});
+
+import { applyLiveCatalog, publicAsset } from '../src/data/liveCatalog';
+import { STORES, ALL_PRODUCTS } from '../src/data/catalog';
+
+describe('live catalogue boundary', () => {
+  it('rejects executable and credential-bearing asset URLs', () => {
+    expect(publicAsset('javascript:alert(1)')).toBeUndefined();
+    expect(publicAsset('https://name:secret@example.com/model.glb')).toBeUndefined();
+    expect(publicAsset('/assets/../private')).toBeUndefined();
+    expect(publicAsset('/assets/models/ceramic_vase_03.glb')).toBe('/assets/models/ceramic_vase_03.glb');
+  });
+  it('keeps empty live responses clearly labelled demo', () => {
+    expect(applyLiveCatalog([])).toBe(0);
+    expect(ALL_PRODUCTS.every(p => p.demo)).toBe(true);
+  });
+  it('integrates approved records instead of matching only demo slugs', () => {
+    const before = STORES.map(s => s.products);
+    try {
+      expect(applyLiveCatalog([{slug:'verified-vase',store_slug:'home-gallery',name_en:'Verified vase',name_ar:null,retail_price:25,in_stock:true}])).toBe(1);
+      const p = ALL_PRODUCTS.find(p => p.slug==='verified-vase');
+      expect(p?.demo).toBe(false); expect(p?.priceUSD).toBe(25);
+      expect(STORES.find(s=>s.id==='home-gallery')?.products).toHaveLength(1);
+    } finally {
+      STORES.forEach((s,i)=>{s.products=before[i];});
+      ALL_PRODUCTS.splice(0,ALL_PRODUCTS.length,...STORES.flatMap(s=>s.products));
+    }
+  });
+});

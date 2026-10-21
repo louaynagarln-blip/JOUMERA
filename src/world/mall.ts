@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { Box } from '../controls/collision';
 import { STORES, type Product, type StoreDef } from '../data/catalog';
-import { makeProductMesh } from './productMesh';
+import { Furnishings, disposeObject, batchArchitecture, ASSETS, type AssetName } from './assets';
 
 export const BOUNDS = { minX: -20, maxX: 20, minZ: -36, maxZ: 12 };
 export interface Pickable { product: Product; obj: THREE.Object3D; pos: THREE.Vector3 }
@@ -13,7 +13,7 @@ export interface Mall {
   update(t: number): void;
   dispose(): void;
 }
-export const STAGES = 4;
+export const STAGES = 11;
 
 function rng(seed: number) {
   return () => {
@@ -22,52 +22,6 @@ function rng(seed: number) {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
-}
-
-/** Hand-built PBR maps give the broad stone surfaces slab scale, grain and mineral veining. */
-function marbleCanvas(height = false): HTMLCanvasElement {
-  const c = document.createElement('canvas');
-  c.width = c.height = 1024;
-  const g = c.getContext('2d')!;
-  const r = rng(7);
-  g.fillStyle = height ? '#818181' : '#e6dfd2';
-  g.fillRect(0, 0, 1024, 1024);
-  for (let i = 0; i < 320; i++) {
-    const x = r() * 1024, y = r() * 1024;
-    const rad = 18 + r() * 120;
-    const v = (110 + r() * 48) | 0;
-    const grad = g.createRadialGradient(x, y, 0, x, y, rad);
-    grad.addColorStop(0, height ? `rgba(${v},${v},${v},0.18)` : `rgba(151,139,120,0.10)`);
-    grad.addColorStop(1, 'rgba(255,255,255,0)');
-    g.fillStyle = grad;
-    g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
-  }
-  for (let i = 0; i < 18; i++) {
-    const alpha = 0.08 + r() * 0.18;
-    g.strokeStyle = height ? `rgba(55,55,55,${alpha + 0.2})` : `rgba(105,94,79,${alpha})`;
-    g.lineWidth = 0.7 + r() * 2.4;
-    g.beginPath();
-    let x = r() * 1024, y = r() * 1024;
-    g.moveTo(x, y);
-    for (let k = 0; k < 10; k++) {
-      x += (r() - 0.44) * 150; y += (r() - 0.44) * 150;
-      g.quadraticCurveTo(x + (r() - 0.5) * 85, y + (r() - 0.5) * 85, x, y);
-    }
-    g.stroke();
-    if (!height && i % 3 === 0) {
-      g.strokeStyle = `rgba(226,207,167,${alpha * 0.45})`;
-      g.lineWidth *= 0.35;
-      g.stroke();
-    }
-  }
-  // Fine slab edge and softened bevel catch; the repeat reads as large cut stone, not noise.
-  g.strokeStyle = height ? 'rgba(52,52,52,0.45)' : 'rgba(111,98,78,0.22)';
-  g.lineWidth = 5;
-  g.strokeRect(3, 3, 1018, 1018);
-  g.strokeStyle = height ? 'rgba(220,220,220,0.22)' : 'rgba(255,255,255,0.38)';
-  g.lineWidth = 2;
-  g.strokeRect(8, 8, 1008, 1008);
-  return c;
 }
 
 function woodCanvas(): HTMLCanvasElement {
@@ -126,26 +80,26 @@ export async function buildMall(
   const animatedDisplays: THREE.MeshBasicMaterial[] = [];
   const aniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 
-  const marbleBase = new THREE.CanvasTexture(marbleCanvas());
+  const furnishings = new Furnishings();
+  await furnishings.load(async (done) => onStage(done, STAGES, `Loading licensed models ${done}/7`));
+  const loader = new THREE.TextureLoader();
+  const [marbleBase, marbleNormal, marbleRough] = await Promise.all([
+    loader.loadAsync('/assets/materials/marble_Diffuse.jpg'),
+    loader.loadAsync('/assets/materials/marble_nor_gl.jpg'),
+    loader.loadAsync('/assets/materials/marble_Rough.jpg'),
+  ]);
   marbleBase.colorSpace = THREE.SRGBColorSpace;
-  marbleBase.wrapS = marbleBase.wrapT = THREE.RepeatWrapping;
-  marbleBase.anisotropy = aniso;
-  const marbleBumpBase = new THREE.CanvasTexture(marbleCanvas(true));
-  marbleBumpBase.wrapS = marbleBumpBase.wrapT = THREE.RepeatWrapping;
-  marbleBumpBase.anisotropy = aniso;
+  for (const tx of [marbleBase, marbleNormal, marbleRough]) { tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.anisotropy = aniso; }
   const woodBase = new THREE.CanvasTexture(woodCanvas());
   woodBase.colorSpace = THREE.SRGBColorSpace;
   woodBase.wrapS = woodBase.wrapT = THREE.RepeatWrapping;
   woodBase.anisotropy = aniso;
-  extraDispose.push(marbleBase, marbleBumpBase, woodBase);
+  extraDispose.push(marbleBase, marbleNormal, marbleRough, woodBase);
   const marbleMat = (rx: number, rz: number) => {
-    const tx = marbleBase.clone();
-    const bump = marbleBumpBase.clone();
-    tx.repeat.set(rx, rz);
-    bump.repeat.set(rx, rz);
-    tx.needsUpdate = true; bump.needsUpdate = true;
-    extraDispose.push(tx, bump);
-    return new THREE.MeshStandardMaterial({ map: tx, bumpMap: bump, bumpScale: 0.012, roughness: 0.29, metalness: 0.035 });
+    const maps = [marbleBase, marbleNormal, marbleRough].map(base => {
+      const tx = base.clone(); tx.repeat.set(rx, rz); tx.needsUpdate = true; extraDispose.push(tx); return tx;
+    });
+    return new THREE.MeshStandardMaterial({map: maps[0], normalMap: maps[1], roughnessMap: maps[2], roughness: .72, metalness: 0, normalScale: new THREE.Vector2(.35,.35)});
   };
   const storeFloorMat = (color: number) => {
     const tx = new THREE.CanvasTexture(tileCanvas(color));
@@ -231,7 +185,7 @@ export async function buildMall(
   };
 
   // ---------- Stage 1: hall shell ----------
-  await onStage(1, STAGES, 'Architecture');
+  await onStage(8, STAGES, 'Architecture');
   plane(-20, 20, -36, 12, 0, marbleMat(20, 24));
   // The atrium roof is a shallow barrel vault: bronze ribs, glazed bays and recessed warm light rails.
   for (let z = 9; z >= -31; z -= 10) {
@@ -320,7 +274,7 @@ export async function buildMall(
   group.add(shafts, bases, capitals);
 
   // ---------- Stage 2: storefronts ----------
-  await onStage(2, STAGES, 'Storefronts');
+  await onStage(9, STAGES, 'Storefronts');
   for (const s of [-1, 1] as const) {
     const sx0 = s > 0 ? 8 : -8.25;
     const sx1 = s > 0 ? 8.25 : -8;
@@ -342,13 +296,6 @@ export async function buildMall(
       for (const z of [st.zc - 4.7, st.zc - 2.8, st.zc + 2.8, st.zc + 4.7]) {
         box(mid - 0.045, mid + 0.045, 0.12, 3.5, z - 0.035, z + 0.035, M.frame, false, false);
       }
-      // Open glass entry remains traversable; the side panes have clear divisions and kick plates.
-      for (const [d0, d1] of [[st.zc - 1.42, st.zc - 0.72], [st.zc + 0.72, st.zc + 1.42]]) {
-        box(mid - 0.04, mid + 0.04, 0.12, 0.48, d0, d1, M.frame, false, false);
-        box(mid - 0.04, mid + 0.04, 0.48, 3.35, d0, d1, M.glass, false, false);
-      }
-      box(mid - 0.065, mid + 0.065, 0.7, 2.35, st.zc - 0.72, st.zc - 0.65, brassMat, false, false);
-      box(mid - 0.065, mid + 0.065, 0.7, 2.35, st.zc + 0.65, st.zc + 0.72, brassMat, false, false);
       // Door header and a slim threshold create a readable shop entrance without blocking movement.
       box(mid - 0.13, mid + 0.13, 3.58, 3.73, st.zc - 1.5, st.zc + 1.5, brassMat, false, false);
       box(mid - 0.2, mid + 0.2, 0.02, 0.065, st.zc - 1.45, st.zc + 1.45, brassMat, false, false);
@@ -363,7 +310,7 @@ export async function buildMall(
   }
 
   // ---------- Stage 3: store interiors + products ----------
-  await onStage(3, STAGES, 'Store interiors');
+  await onStage(10, STAGES, 'Store interiors');
   const sun = new THREE.DirectionalLight(0xfff1dc, 1.3);
   sun.position.set(8, 24, 10);
   sun.target.position.set(0, 0, -12);
@@ -417,28 +364,13 @@ export async function buildMall(
         const glow = box(...rx(18.48, 18.5), 1.73, 1.78, z - 0.88, z + 0.88, M.led, false, false); glow.castShadow = false;
       }
     } else if (st.id === 'home-gallery') {
-      // A quiet interior lounge vignette with rounded forms and warm wood.
-      for (const z of [st.zc - 2.65, st.zc + 2.65]) {
-        const stool = new THREE.Mesh(new THREE.CylinderGeometry(.52, .58, .42, 32), woodMat);
-        stool.position.set(s * 10.8, .22, z); stool.castShadow = stool.receiveShadow = true; group.add(stool);
-        const cushion = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, .12, 32), M.stone);
-        cushion.position.set(s * 10.8, .49, z); cushion.castShadow = true; group.add(cushion);
+      // Full-scale textile lounge chairs replace the primitive stools.
+      for (const z of [st.zc - 2.7, st.zc + 2.7]) {
+        furnishings.place('modern_arm_chair_01', group, s * 11.5, 0, z, 1.0, s * Math.PI / 2, colliders);
       }
-      const vaseGeo = new THREE.LatheGeometry([[0,0],[.14,0],[.24,.1],[.21,.42],[.12,.62],[.13,.78]].map(([x,y]) => new THREE.Vector2(x,y)), 32);
-      const feature = new THREE.Mesh(vaseGeo, std(0xd9cbb7, .24));
-      feature.position.set(s * 11.3, .56, st.zc); feature.scale.setScalar(1.15); feature.castShadow = true; group.add(feature);
     } else if (st.id === 'style-lab') {
-      // Slim garment rails with a rhythm of draped, tapered fabric forms.
-      for (const z of [st.zc - 2.5, st.zc + 2.5]) {
-        const rail = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, 3.5, 12), brassMat);
-        rail.rotation.z = Math.PI / 2; rail.position.set(s * 11.3, 1.95, z); rail.castShadow = true; group.add(rail);
-        for (let j = 0; j < 5; j++) {
-          const hanger = new THREE.Mesh(new THREE.TorusGeometry(.13, .012, 6, 16, Math.PI), darkMetal);
-          hanger.rotation.set(0, Math.PI / 2, 0); hanger.position.set(s * (10.1 + j * .48), 1.77, z); group.add(hanger);
-          const textile = new THREE.Mesh(new THREE.CapsuleGeometry(.13, .38, 3, 8), std([0x794c58, 0x9b846a, 0x3e4048, 0x73655b, 0x4d635d][j], .78));
-          textile.scale.set(.85, 1, .22); textile.position.set(s * (10.1 + j * .48), 1.35, z); textile.castShadow = true; group.add(textile);
-        }
-      }
+      // Fitting lounge: no primitive capsule shapes presented as garments.
+      furnishings.place('modern_arm_chair_01', group, s * 11.1, 0, st.zc - 3.2, .95, s * Math.PI / 2, colliders);
     } else if (st.id === 'smart-living') {
       // Circular light installation and floating ledges for connected-home devices.
       for (const z of [st.zc - 2.1, st.zc + 2.1]) {
@@ -457,89 +389,56 @@ export async function buildMall(
       }
     }
 
-    // shelving with instanced decor items
+    // Curated display niches replace the repeated low-detail merchandise silhouettes.
     const [sh0, sh1] = rx(18.9, 19.9);
     colliders.push({ minX: sh0, maxX: sh1, minZ: st.zc - 4, maxZ: st.zc + 4 });
-    const levels = [0.48, 1.12, 1.76, 2.4, 3.04];
-    for (const lv of levels) {
-      const plank = box(sh0, sh1, lv, lv + 0.055, st.zc - 4, st.zc + 4, woodMat, false);
-      plank.castShadow = true;
-      box(sh0 + 0.02, sh0 + 0.07, lv, lv + 0.045, st.zc - 4, st.zc + 4, brassMat, false, false);
+    for (const z of [st.zc - 2.8, st.zc + 2.8]) {
+      box(sh0, sh1, .65, .72, z - .8, z + .8, woodMat);
+      box(sh0, sh1, 1.75, 1.82, z - .8, z + .8, woodMat);
+      furnishings.place('ceramic_vase_03', group, s * 19.35, .72, z, .62);
+      furnishings.place('ceramic_vase_03', group, s * 19.35, 1.82, z + .3, .44);
     }
-    for (const z of [-4, 0, 4]) box(sh0, sh1, 0, 3.1, st.zc + z - 0.045, st.zc + z + 0.045, darkMetal, false);
-    // Low-poly merchandise silhouettes are instanced by product form, not repeated coloured cubes.
-    const vasePts = [[0, 0], [.08, 0], [.12, .1], [.1, .22], [.065, .3], [.05, .4], [.075, .43]].map(([x, y]) => new THREE.Vector2(x, y));
-    const forms: Record<string, THREE.BufferGeometry> = {
-      laptop: new THREE.BoxGeometry(.42, .035, .3),
-      speaker: new THREE.CylinderGeometry(.095, .105, .3, 24),
-      vase: new THREE.LatheGeometry(vasePts, 24),
-      bottle: new THREE.CylinderGeometry(.052, .06, .22, 20),
-      bag: new THREE.BoxGeometry(.34, .29, .14),
-      lamp: new THREE.ConeGeometry(.14, .23, 24, 1, true),
-    };
-    for (const shape of new Set(st.products.map((p) => p.shape))) {
-      const ps = st.products.filter((p) => p.shape === shape);
-      const count = levels.length * 3;
-      const items = new THREE.InstancedMesh(forms[shape], new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: shape === 'vase' || shape === 'bottle' ? .26 : .39, metalness: shape === 'laptop' ? .5 : .12, envMapIntensity: .65 }), count);
-      let k = 0;
-      for (const lv of levels) for (let j = 0; j < 3; j++) {
-        const p = ps[(k + j) % ps.length];
-        const h = shape === 'vase' ? .42 : shape === 'speaker' ? .3 : shape === 'laptop' ? .07 : shape === 'bag' ? .3 : .22;
-        dummy.position.set(s * 19.12, lv + .06 + h * .5, st.zc - 3.1 + j * 2.05);
-        dummy.scale.set(1, shape === 'vase' ? .9 : 1, 1);
-        dummy.rotation.set(0, shape === 'laptop' ? -.16 : (j % 2) * .12, 0);
-        dummy.updateMatrix(); items.setMatrixAt(k, dummy.matrix);
-        items.setColorAt(k, new THREE.Color(p.color)); k++;
-      }
-      items.castShadow = true; items.receiveShadow = true; group.add(items);
-    }
+    furnishings.place('modern_ceiling_lamp_01', group, s * 14, 2.65, st.zc, .8);
+    furnishings.place('potted_plant_02', group, s * 17.5, 0, st.zc + 3.6, 1.35, 0, colliders);
 
+    if (st.id === 'home-gallery') {
+      furnishings.place('sofa_03', group, s * 17, 0, st.zc, .85, s * Math.PI / 2, colliders);
+      furnishings.place('modern_coffee_table_01', group, s * 14, 0, st.zc, .45, 0, colliders);
+    } else {
     // display table
     const islandBase = new THREE.Mesh(new THREE.CylinderGeometry(3.45, 3.25, .72, 48), M.dark);
     islandBase.scale.x = .36; islandBase.position.set(s * 14, .38, st.zc); islandBase.castShadow = islandBase.receiveShadow = true; group.add(islandBase);
     const islandTop = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, .08, 48), M.stone);
     islandTop.scale.x = .36; islandTop.position.set(s * 14, .78, st.zc); islandTop.castShadow = islandTop.receiveShadow = true; group.add(islandTop);
-    const [t0, t1] = rx(13.35, 14.65);
+    const [t0, t1] = rx(12.7, 15.3);
     colliders.push({ minX: t0, maxX: t1, minZ: st.zc - 3.55, maxZ: st.zc + 3.55 });
+    }
     // counter
     const [c0, c1] = rx(10, 10.8);
     box(c0, c1, 0, 1.05, st.zc + 2.9, st.zc + 4.8, M.dark, true);
     box(c0 - 0.02, c1 + 0.02, 1.05, 1.09, st.zc + 2.88, st.zc + 4.82, M.gold, false);
 
-    st.products.forEach((p, i) => {
-      const obj = makeProductMesh(p);
-      const z = st.zc - 2.7 + i * 1.8;
-      obj.position.set(s * 14, 0.86, z);
-      obj.scale.setScalar(1.5);
-      group.add(obj);
-      pickables.push({ product: p, obj, pos: new THREE.Vector3(s * 14, 1.1, z) });
+    st.products.slice(0, 4).forEach((p, i) => {
+      const home = st.id === 'home-gallery';
+      const z = home && i === 0 ? st.zc : st.zc - 2.7 + i * 1.8;
+      const x = home && i !== 0 ? s * 18.3 : s * 14;
+      let obj: THREE.Object3D;
+      const assetName = p.glb?.split('/').pop()?.replace('.glb', '') as AssetName;
+      if (ASSETS.includes(assetName)) {
+        obj = furnishings.place(assetName, group, x, home ? .46 : .84, z, assetName === 'classic_laptop' ? .32 : .55);
+      } else {
+        obj = label(`${p.name.en}${p.demo ? ' · DEMO' : ''}`, 1.25, .48, '#e8d5b4', '#19262b', 2);
+        obj.position.set(x, 1.1, z); obj.rotation.y = -s * Math.PI / 2;
+      }
+      pickables.push({ product: p, obj, pos: new THREE.Vector3(x, 1.1, z) });
     });
   };
   STORES.forEach(buildStore);
 
   // ---------- Stage 4: hall furniture ----------
-  await onStage(4, STAGES, 'Furnishing');
+  await onStage(11, STAGES, 'Furnishing');
   const plant = (x: number, z: number, sc: number) => {
-    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.35 * sc, 0.28 * sc, 0.55 * sc, 32), M.pot);
-    pot.position.set(x, 0.275 * sc, z);
-    pot.castShadow = true;
-    group.add(pot);
-    const rr = rng(Math.floor(x * 13 + z * 7));
-    const soil = new THREE.Mesh(new THREE.CylinderGeometry(.29 * sc, .29 * sc, .035 * sc, 32), darkMetal);
-    soil.position.set(x, .55 * sc, z); group.add(soil);
-    const foliage = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 10, 8), M.leaf, 15);
-    const leafTransform = new THREE.Object3D();
-    for (let i = 0; i < 15; i++) {
-      const angle = rr() * Math.PI * 2;
-      const reach = (.22 + rr() * .44) * sc;
-      leafTransform.scale.set(.13 * sc, (.42 + rr() * .35) * sc, .09 * sc);
-      leafTransform.position.set(x + Math.cos(angle) * reach * .55, (.78 + rr() * 1.25) * sc, z + Math.sin(angle) * reach * .55);
-      leafTransform.rotation.set(Math.sin(angle) * .56, angle, Math.cos(angle) * -.56);
-      leafTransform.updateMatrix(); foliage.setMatrixAt(i, leafTransform.matrix);
-      foliage.setColorAt(i, new THREE.Color(i % 3 ? 0x304a3b : 0x526c52));
-    }
-    foliage.castShadow = true; foliage.receiveShadow = false; group.add(foliage);
-    colliders.push({ minX: x - 0.4 * sc, maxX: x + 0.4 * sc, minZ: z - 0.4 * sc, maxZ: z + 0.4 * sc });
+    furnishings.place('potted_plant_02', group, x, z === -17 ? .5 : 0, z, sc * 1.3, 0, colliders);
   };
   for (const s of [-1, 1]) { plant(s * 7.2, 9, 1.3); plant(s * 7.2, -33, 1.3); }
   // central island
@@ -553,32 +452,22 @@ export async function buildMall(
   group.add(rim);
   colliders.push({ minX: -1.6, maxX: 1.6, minZ: -18.6, maxZ: -15.4 });
   plant(0, -17, 1.8);
-  // Slatted oak-and-bronze benches, sized as practical seating and kept clear of the walking lane.
-  for (const s of [-1, 1]) for (const z of [-5, -11, -23]) {
-    const x = s * 2.6;
-    for (let k = 0; k < 5; k++) box(x - .26, x + .26, .43, .49, z - .88 + k * .36, z - .67 + k * .36, M.wood, false);
-    for (const zz of [z - .62, z + .62]) {
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(.07, .43, .07), brassMat);
-      leg.position.set(x, .215, zz); leg.castShadow = true; group.add(leg);
-    }
-    for (let k = 0; k < 4; k++) box(x - .24, x + .24, .52 + k * .31, .58 + k * .31, z + .68, z + .9, M.wood, false);
-    colliders.push({ minX: x - 0.3, maxX: x + 0.3, minZ: z - 0.9, maxZ: z + 0.9 });
+  // Paired upholstered seats make recognisable rest areas at human scale.
+  for (const s of [-1, 1]) for (const z of [-5, -23]) {
+    furnishings.place('modern_arm_chair_01', group, s * 3.25, 0, z, 1, -s * Math.PI / 2, colliders);
   }
+  // Entrance is glazed at the edge of the navigable floor, not an unbounded drop.
+  colliders.push({minX:-20,maxX:20,minZ:11.9,maxZ:12.2});
 
+  batchArchitecture(group);
   return {
     group, colliders, pickables, sun,
     update(t: number) {
-      pickables.forEach((p, i) => { p.obj.rotation.y = t * 0.45 + i; });
+
       animatedDisplays.forEach((m, i) => { m.opacity = .94 + Math.sin(t * .7 + i) * .035; });
     },
     dispose() {
-      group.traverse((o) => {
-        if (o instanceof THREE.Mesh) {
-          o.geometry.dispose();
-          const m = o.material as THREE.Material | THREE.Material[];
-          (Array.isArray(m) ? m : [m]).forEach((mm) => mm.dispose());
-        }
-      });
+      disposeObject(group);
       extraDispose.forEach((d) => d.dispose());
     },
   };

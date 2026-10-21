@@ -7,7 +7,7 @@ const key = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VI
 export const isLive = Boolean(url && key);
 const sb: SupabaseClient | null = isLive ? createClient(url!, key!) : null;
 
-export interface CatalogRow { slug: string; store_slug: string; name_en: string; name_ar: string | null; retail_price: number; in_stock: boolean }
+export interface CatalogRow { slug: string; store_slug: string; name_en: string; name_ar: string | null; retail_price: number; in_stock: boolean; description_en?: string | null; description_ar?: string | null; variants?: import('../data/catalog').Variant[]; model_path?: string | null; image_path?: string | null }
 export interface CustomerInfo { name: string; phone: string; address: string; notes: string }
 
 export async function fetchLiveCatalog(): Promise<CatalogRow[]> {

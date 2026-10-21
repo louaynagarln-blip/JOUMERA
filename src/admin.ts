@@ -10,6 +10,7 @@ const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.get
 const escape = (value: unknown) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
 let client: SupabaseClient | null = url && key ? createClient(url, key) : null;
 let currentRole = '';
+let editingVariants: unknown[] = [];
 let rows: Product[] = [];
 
 interface Profile { role: string; store_id: string | null; store_name: string | null }
@@ -67,6 +68,7 @@ async function loadVendorProducts() {
 }
 
 function editProduct(p?: VendorProduct) {
+  editingVariants = p?.variants ?? [];
   $('product-form').classList.remove('hidden');
   const vals: Record<string, string> = {
       'product-id': p?.id ?? '', 'product-slug': p?.slug ?? '', 'product-name': p?.name_en ?? '',
@@ -86,7 +88,7 @@ $('product-form').addEventListener('submit', async (event) => {
       p_id: $('product-id').value || null, p_slug: $('product-slug').value.trim(), p_name_en: $('product-name').value.trim(),
       p_name_ar: $('product-name-ar').value.trim() || null, p_description_en: $('product-description').value.trim() || null,
       p_description_ar: $('product-description-ar').value.trim() || null, p_wholesale_price: Number($('product-wholesale').value),
-      p_stock: Number($('product-stock').value), p_variants: [], p_model_path: $('product-model').value.trim() || null,
+      p_stock: Number($('product-stock').value), p_variants: editingVariants, p_model_path: $('product-model').value.trim() || null,
       p_image_path: $('product-image').value.trim() || null,
     });
     if (error) throw error;
@@ -101,7 +103,7 @@ async function loadAdmin() {
   if (productResult.error || userResult.error) { message('workspace-message', (productResult.error ?? userResult.error)!.message, true); return; }
   rows = (productResult.data ?? []) as Product[];
   $('admin-products').innerHTML = rows.length ? `<table><thead><tr><th>Product</th><th>Store</th><th>Status</th><th>Wholesale</th><th>Retail price / review</th></tr></thead><tbody>${rows.map((p) => `<tr><td>${escape(p.name_en)}<small>${escape(p.slug)}</small></td><td>${escape(p.store_name)}</td><td>${escape(p.status)}</td><td>${p.wholesale_price == null ? '—' : Number(p.wholesale_price).toFixed(2)}</td><td><div class="price-cell"><input class="retail-input" aria-label="Retail price" type="number" min="0" step="0.01" value="${p.retail_price == null ? '' : escape(p.retail_price)}" /><button class="admin-button approve" data-id="${escape(p.id)}">Approve</button><button class="admin-button reject" data-id="${escape(p.id)}">Reject</button></div></td></tr>`).join('')}</tbody></table>` : '<p class="empty">No product submissions yet.</p>';
-  $('admin-products').querySelectorAll<HTMLButtonElement>('.approve').forEach((b) => b.addEventListener('click', () => review(b.dataset.id!, true, Number(b.parentElement!.querySelector('input')!.value))));
+  $('admin-products').querySelectorAll<HTMLButtonElement>('.approve').forEach((b) => b.addEventListener('click', () => review(b.dataset.id!, true, b.parentElement!.querySelector('input')!.value.trim() === '' ? null : Number(b.parentElement!.querySelector('input')!.value))));
   $('admin-products').querySelectorAll<HTMLButtonElement>('.reject').forEach((b) => b.addEventListener('click', () => review(b.dataset.id!, false, null)));
   const users = (userResult.data ?? []) as Array<{user_id:string;email:string;role:string}>;
   $('admin-users').innerHTML = users.length ? `<table><thead><tr><th>Verified account</th><th>Role</th><th>Assign access</th></tr></thead><tbody>${users.map((u) => `<tr><td>${escape(u.email)}<small class="uuid">${escape(u.user_id)}</small></td><td>${escape(u.role)}</td><td><div class="role-cell"><select aria-label="Role for ${escape(u.email)}" data-user="${escape(u.user_id)}"><option value="customer" ${u.role==='customer'?'selected':''}>Customer</option><option value="vendor" ${u.role==='vendor'?'selected':''}>Vendor</option><option value="super_admin" ${u.role==='super_admin'?'selected':''}>Super admin</option></select><button class="admin-button assign-role" data-user="${escape(u.user_id)}">Save</button></div></td></tr>`).join('')}</tbody></table>` : '<p class="empty">No authenticated accounts exist yet.</p>';
@@ -109,7 +111,7 @@ async function loadAdmin() {
 }
 
 async function review(id: string, approve: boolean, price: number | null) {
-  if (approve && (!Number.isFinite(price) || price! < 0)) { message('workspace-message', 'Enter a valid retail price before approval.', true); return; }
+  if (approve && (price === null || !Number.isFinite(price) || price <= 0)) { message('workspace-message', 'Enter a valid retail price before approval.', true); return; }
   const { error } = await needClient().rpc('vmall_admin_review_product', { p_id: id, p_approve: approve, p_retail_price: price });
   if (error) message('workspace-message', error.message, true); else { message('workspace-message', approve ? 'Approved with administrator price.' : 'Product rejected.'); await loadAdmin(); }
 }

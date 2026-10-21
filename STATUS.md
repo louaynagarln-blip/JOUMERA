@@ -1,35 +1,39 @@
-# JOUMERA V-MALL — release candidate
+# JOUMERA V-MALL — launch gate: BLOCKED
 
-This branch deploys a **development preview**. It is not ready to replace the live HOCO storefront or accept commercial orders.
+Updated 2026-10-21. This is a development candidate, not a finished commercial launch. Production/main remain unchanged.
 
-## Implemented
+## Delivered in this revision
 
-- Three.js mall shell with generated marble/wood/tile material maps, warm lighting, glass storefronts, a vaulted roof and store-specific fixture layouts. The arrival foyer now has a wide, clear sliding-door opening, illuminated portal signage, stone inlay and a lightweight ring chandelier; the reduced-motion option also removes the idle entrance sway.
-- Five walkable interiors: TECH STUDIO, HOME GALLERY, STYLE LAB, SMART LIVING and BEAUTY ATELIER.
-- First-person mobile movement with eased acceleration/turning, touch-ID-separated joystick and look controls, auto-walk cancellation, collision resolution and reduced-motion support.
-- Bilingual store/product search, product viewer, cart, DEMO price marking and catalog fallback when WebGL cannot start.
-- Unit coverage for movement, collision, pathfinding, cart calculations and Arabic/English search.
-- An isolated `v_mall` schema added to the active HOCO Supabase database. Its tables have RLS enabled and no direct `anon`/`authenticated` table privileges. `vmall_catalog` returns only approved, priced products; no V-Mall products were seeded. `vmall_place_order` checks a server-side checkout flag and is not executable by public API roles.
-- A separate `/admin-vmall.html` sign-in and management workspace, plus database role-checked RPCs for vendor product submissions, administrator price approval, account role assignment and store creation. Vendor writes cannot set retail prices. RPC privileges/search paths were read back from HOCO after migration. The workspace has not been exercised with real administrator or vendor sessions.
+- Seven downloaded, checksum-verified CC0 Poly Haven models, included as optimized GLB: chair, sofa, coffee table, vase, plant, ceiling lamp and classic laptop. Three actual marble PBR maps replace generated marble. See `public/assets/LICENSES.md` and `PROVENANCE.json`.
+- Shared decoded resources, spatial architecture batching, near-distance detailed furniture, 512px embedded WebP, Meshopt geometry, anisotropic marble and capped adaptive pixel ratio. WebP is download compression, not GPU compression.
+- HOME GALLERY now has a real sofa/chair/table vignette. Licensed seating, plants, ceiling fixtures and ceramic displays are integrated across the other stores/atrium. Repetitive primitive shelf merchandise, capsule garments and rotating products are removed. Missing product models are honest labelled cards, not claimed as realistic stock.
+- Accurate bounding-box collisions for imported floor furnishings; corrected oversized display-island collision and open glass portals. The entrance has a bounded floor edge.
+- Fixed-step walking at 120Hz simulation, up to 250ms delayed-frame recovery, substepped collision movement, eased velocity, segment-following auto-walk, immediate joystick cancel, bounded pitch, gentler look, pointer-capture/blur/orientation reset, optional head motion off by default, touch tap-to-walk.
+- Actual approved catalog records can populate matching flagship stores, including image/model/variant fields. Empty results keep demos labelled. Catalogue fetching works before WebGL fallback. Real checkout stays disabled.
+- Vendor edits preserve existing variants. Admin approval rejects a blank/zero client price. Product viewing uses actual GLB when supplied, photographs when supplied, otherwise an explicit unavailable-model status.
 
-## Not ready for commercial launch
+## Verified
 
-- The 20 products and prices shown in fallback mode are **demo data**, not vendor inventory. The live V-Mall catalog currently returns no items.
-- Checkout remains disabled. No real V-Mall order has been accepted or tested. Verified supplier stock/prices, delivery fees, fulfillment policy and anti-abuse controls are missing.
-- No V-Mall super-admin has been assigned. Initial privilege bootstrapping requires an explicitly verified Auth account; the project owner email was not assumed to be a V-Mall identity. No vendor accounts, stores or products exist yet, and role-isolation behavior has not been end-to-end tested with two real accounts. HOCO's existing `/admin` page remains separate.
-- The existing HOCO tables and records were left unchanged, but V-Mall schema installation added a new private schema and two RPC functions to that active Supabase project.
-- No licensed GLB mall/store/product pack or external PBR texture pack is bundled. Geometry and materials remain procedural; the environment is a stylized preview, not photorealistic.
-- No final Android device run or measured FPS/latency run is available. The attached recording shows an earlier preview. The cloud browser does not provide WebGL, so it cannot verify the final 3D scene.
+- npm install, TypeScript lint, 24 Vitest cases, Vite production build: passed (see automated test log).
+- Source GLBs have valid glTF headers, embedded resources, Meshopt extension and recorded triangle counts. No rendered visual quality claim follows from this check.
+- HOCO database: private v_mall tables have RLS; no direct browser table access. 0 mall products, 0 mall orders, 0 mall super-admins. Existing HOCO data remained 64 products / 1 order.
+- Authenticated role without a V-Mall profile was denied admin read, vendor read, price changes and checkout in live database tests.
+- Server price lookup ignored a fabricated client price; stock deduction, invalid quantity, overselling rejection and transaction atomicity passed in a transaction rolled back completely. Confirmed 0 persisted fixtures/orders and checkout still disabled afterward. This is not an end-to-end customer order test.
 
-## Verification
+## Release blockers / incomplete features
 
-```text
-npm install       passed
-npm run lint      passed
-npm test          14 passed
-npm run build     passed
-Vercel Preview    READY; page returned HTTP 200
-Supabase          v_mall schema/RLS and management/order RPC privileges verified; catalog empty; checkout disabled
-```
+- Cloud browser cannot create WebGL. No final entrance/atrium/corridor/store rendered screenshots, visual acceptance, real multi-touch run or device FPS measurements. Attached 350319.mp4 is the old Android baseline only.
+- Architecture is still code-built, with no baked lighting, authored complete mall GLB, KTX2 textures or verified architectural art direction. Seven real props improve content but do NOT establish photorealism or the requested world-class visual standard.
+- Most product categories lack supplier imagery/models and verified stock/prices. Cards intentionally replace false product geometry. The classic laptop is a heritage decorative sample.
+- No verified initial administrator account or vendor sessions; authentication bootstrap and two-vendor isolation acceptance remain blocked. No temporary account/password was created.
+- Management supports sign-in, role checks, store creation, product submission and price review. It is not a complete platform: order operations/tracking, rentals, advertisements, sales analytics, media uploads and fully bilingual management remain incomplete.
+- Checkout remains disabled in UI, database flag and public RPC permissions. Delivery fees, business policies, abuse prevention, variant validation, idempotency and full customer order acceptance need completion before enabling.
+- Only the five fixed flagship store slugs map into the 3D layout. Arbitrary additional stores are not automatically given architecture.
+- The development candidate must not replace the official production deployment while these gates fail.
 
-Keep Vercel Production on the existing `main` deployment until the missing catalogue, vendor/admin controls, commerce policy and Android device QA are complete.
+## Rollback reference
+
+Production baseline commit: ab9d9cb53b56da824b06ee8dac51a98de59448cf.
+Production deployment: dpl_8RZ57zrUDQMcMUxBU9XcNFX1X1Rr.
+Prior development commit: a04534910b1dbc9f8582efe1da8c09b9795b22f0.
+No production promotion was performed. No database migration was applied by this revision.

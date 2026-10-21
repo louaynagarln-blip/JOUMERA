@@ -31,3 +31,14 @@ export function resolveCircle(x: number, z: number, r: number, boxes: Box[]): { 
   }
   return { x, z };
 }
+
+/** Subdivision prevents a long step from crossing thin glass and preserves wall sliding. */
+export function moveCircle(x: number, z: number, dx: number, dz: number, r: number, boxes: Box[]): { x: number; z: number } {
+  if (![x, z, dx, dz, r].every(Number.isFinite) || r <= 0) throw new Error('Invalid movement');
+  const steps = Math.max(1, Math.ceil(Math.hypot(dx, dz) / (r * .5)));
+  for (let i = 0; i < steps; i++) {
+    const next = resolveCircle(x + dx / steps, z + dz / steps, r, boxes);
+    x = next.x; z = next.z;
+  }
+  return { x, z };
+}

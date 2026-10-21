@@ -45,7 +45,7 @@ export class NavGrid {
   private free(i: number, j: number): boolean {
     return i >= 0 && j >= 0 && i < this.w && j < this.h && this.blocked[j * this.w + i] === 0;
   }
-  isFree(x: number, z: number): boolean { const [i, j] = this.cell(x, z); return this.free(i, j); }
+  isFree(x: number, z: number): boolean { if (x < this.b.minX || x >= this.b.maxX || z < this.b.minZ || z >= this.b.maxZ) return false; const [i, j] = this.cell(x, z); return this.free(i, j); }
 
   private nearestFree(i: number, j: number): [number, number] | null {
     if (this.free(i, j)) return [i, j];
@@ -71,6 +71,8 @@ export class NavGrid {
   }
 
   findPath(sx: number, sz: number, gx: number, gz: number): Pt[] | null {
+    if (!this.isFree(sx, sz) || gx < this.b.minX || gx >= this.b.maxX || gz < this.b.minZ || gz >= this.b.maxZ) return null;
+    if (this.isFree(gx, gz) && this.los({x: sx,z: sz}, {x: gx,z: gz})) return [{x: gx,z: gz}];
     const s = this.nearestFree(...this.cell(sx, sz));
     const g = this.nearestFree(...this.cell(gx, gz));
     if (!s || !g) return null;

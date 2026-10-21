@@ -15,7 +15,7 @@ export interface Product {
   variants: Variant[];
   shape: Shape;
   color: number;
-  /** Path under /public, e.g. /assets/models/x.glb. None exist yet (see assets manifest). */
+  /** Path under /public, e.g. /assets/models/x.glb. Only use a model that matches the displayed item. */
   glb?: string;
   image?: string;
 }
@@ -94,6 +94,20 @@ export const STORES: StoreDef[] = [
     ],
   },
 ];
+
+// Licensed decorative samples remain DEMO; they are not verified vendor inventory.
+for (const store of STORES) for (const product of store.products) {
+  if (product.slug === 'demo-laptop-14') {
+    product.glb = '/assets/models/classic_laptop.glb';
+    product.name = {en:'Classic Laptop — Display Asset', ar:'حاسوب كلاسيكي — مجسم عرض'};
+    product.variants = [];
+  }
+  if (product.slug === 'demo-vase-ceramic') {
+    product.glb = '/assets/models/ceramic_vase_03.glb';
+    product.variants = [];
+    product.desc = { en: 'CC0 ceramic display asset by Poly Haven. Demonstration only, not available for real orders.', ar: 'مجسم سيراميك مرخّص CC0 من Poly Haven للعرض التجريبي فقط، وليس منتجاً متاحاً للطلب الحقيقي.' };
+  }
+}
 
 export const ALL_PRODUCTS: Product[] = STORES.flatMap((s) => s.products);
 export const findProduct = (slug: string): Product | undefined => ALL_PRODUCTS.find((p) => p.slug === slug);

@@ -1,12 +1,78 @@
 {
-  "note": "No binary assets are bundled. Everything marked missing must be supplied and licensed by the project owner.",
-  "textures": [
-    { "id": "floor-marble", "target": "hall floor", "status": "procedural-placeholder", "spec": "PBR set (albedo, normal, roughness) KTX2/Basis, 2048px, tileable ~2m", "license": "CC0 (e.g. ambientCG/Poly Haven) or purchased" }
-  ],
+  "note": "Actual self-contained assets bundled. See LICENSES.md and PROVENANCE.json. Not verified retail inventory.",
   "models": [
-    { "id": "mall-shell", "status": "missing", "spec": "Optional GLB replacing procedural architecture; Meshopt-compressed; baked lightmap in UV2" },
-    { "id": "store-fixtures", "status": "missing", "spec": "Shelves, counters, benches, plants as GLB, instanced by the loader; < 20k tris each" },
-    { "id": "product-models", "status": "missing", "spec": "~10 vendor GLBs, Meshopt compressed, <= 5 MB each, <= 50k tris, 1 unit = 1 metre, base on y=0", "path": "set Product.glb to /assets/models/<file>.glb" }
+    {
+      "id": "ceramic_vase_03",
+      "status": "bundled",
+      "path": "/assets/models/ceramic_vase_03.glb",
+      "bytes": 114252,
+      "triangles": 7234,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "classic_laptop",
+      "status": "bundled",
+      "path": "/assets/models/classic_laptop.glb",
+      "bytes": 192372,
+      "triangles": 9391,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "modern_arm_chair_01",
+      "status": "bundled",
+      "path": "/assets/models/modern_arm_chair_01.glb",
+      "bytes": 133532,
+      "triangles": 6167,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "modern_ceiling_lamp_01",
+      "status": "bundled",
+      "path": "/assets/models/modern_ceiling_lamp_01.glb",
+      "bytes": 77556,
+      "triangles": 4725,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "modern_coffee_table_01",
+      "status": "bundled",
+      "path": "/assets/models/modern_coffee_table_01.glb",
+      "bytes": 62540,
+      "triangles": 2927,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "potted_plant_02",
+      "status": "bundled",
+      "path": "/assets/models/potted_plant_02.glb",
+      "bytes": 358460,
+      "triangles": 28919,
+      "license": "CC0-1.0"
+    },
+    {
+      "id": "sofa_03",
+      "status": "bundled",
+      "path": "/assets/models/sofa_03.glb",
+      "bytes": 132008,
+      "triangles": 6600,
+      "license": "CC0-1.0"
+    }
   ],
-  "hdri": [{ "id": "environment", "status": "using three.js RoomEnvironment", "spec": "Optional neutral interior HDR (EXR/HDR -> PMREM)" }]
+  "textures": [
+    {
+      "id": "marble_01",
+      "status": "bundled",
+      "maps": [
+        "assets/materials/marble_Diffuse.jpg",
+        "assets/materials/marble_nor_gl.jpg",
+        "assets/materials/marble_Rough.jpg"
+      ]
+    }
+  ],
+  "remaining": [
+    "authored mall shell",
+    "baked lighting",
+    "KTX2 GPU compression",
+    "supplier product models/photos"
+  ]
 }

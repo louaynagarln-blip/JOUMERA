@@ -7,7 +7,7 @@ const reducedDefault = (): boolean => {
 };
 
 export function loadSettings(): Settings {
-  const d: Settings = { sens: 1, bob: true, reduced: reducedDefault(), quality: 'auto', tutorialDone: false };
+  const d: Settings = { sens: 1, bob: false, reduced: reducedDefault(), quality: 'auto', tutorialDone: false };
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) return { ...d, ...(JSON.parse(raw) as Partial<Settings>) };

@@ -4,9 +4,10 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { buildMall, BOUNDS, STAGES, type Mall, type Pickable } from './world/mall';
 import { Player } from './controls/player';
 import { NavGrid } from './controls/nav';
-import { STORES, ALL_PRODUCTS, storeRect, type StoreDef } from './data/catalog';
+import { STORES, storeRect, type StoreDef } from './data/catalog';
 import { loadSettings, saveSettings, type Settings } from './settings';
 import { isLive, fetchLiveCatalog } from './api/backend';
+import { applyLiveCatalog } from './data/liveCatalog';
 import { t } from './i18n';
 import * as ui from './ui/ui';
 
@@ -23,6 +24,13 @@ window.addEventListener('unhandledrejection', () => ui.toast('Error'));
 
 async function boot(): Promise<void> {
   ui.setProgress(0.02, t('loading'));
+  let liveNote = false;
+  ui.setCheckoutReady(false);
+  if (isLive) {
+    try { applyLiveCatalog(await fetchLiveCatalog()); }
+    catch { liveNote = true; }
+  }
+  // Checkout is intentionally gated independently of catalogue availability.
   let renderer: THREE.WebGLRenderer;
   try {
     renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -44,23 +52,6 @@ async function boot(): Promise<void> {
   scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
   scene.environmentIntensity = 0.45;
   pm.dispose();
-
-  // live catalogue (only when Supabase is configured); otherwise demo data stays flagged as demo
-  let liveNote = false;
-  ui.setCheckoutReady(false);
-  if (isLive) {
-    try {
-      const rows = await fetchLiveCatalog();
-      const bySlug = new Map(rows.map((r) => [r.slug, r]));
-      for (const p of ALL_PRODUCTS) {
-        const r = bySlug.get(p.slug);
-        p.demo = false;
-        p.priceUSD = r ? r.retail_price : null;
-        p.available = Boolean(r && r.in_stock);
-      }
-      ui.setCheckoutReady(rows.length > 0);
-    } catch { liveNote = true; ui.setCheckoutReady(false); }
-  }
 
   let mall: Mall;
   try {
@@ -133,6 +124,16 @@ async function boot(): Promise<void> {
   };
   player.onAutoWalkEnd = (why) => { if (why === 'stuck') ui.toast(t('stuck')); };
   player.onInteract = ui.triggerInteract;
+  const floorRay = new THREE.Raycaster();
+  const floor = new THREE.Plane(new THREE.Vector3(0,1,0),0);
+  player.onTap = (x, y) => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    floorRay.setFromCamera(new THREE.Vector2((x-rect.left)/rect.width*2-1, -(y-rect.top)/rect.height*2+1), player.camera);
+    const goal = floorRay.ray.intersectPlane(floor, new THREE.Vector3());
+    if (!goal || goal.distanceTo(player.camera.position) > 20 || !nav.isFree(goal.x,goal.z)) return;
+    const path = nav.findPath(player.x,player.z,goal.x,goal.z);
+    if (path?.length) player.walkPath(path);
+  };
 
   renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); cancelAnimationFrame(raf); ui.showContextLost(); });
 
@@ -161,7 +162,7 @@ async function boot(): Promise<void> {
   let curStore: StoreDef | null = null;
   const frame = (now: number) => {
     raf = requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (now - last) / 1000);
+    const dt = Math.max(0, (now - last) / 1000);
     last = now;
     if (!entered) player.yaw = settings.reduced ? 0 : Math.sin(now / 4000) * 0.08; // honor reduced-motion before entry too
     player.update(dt);
@@ -197,7 +198,7 @@ async function boot(): Promise<void> {
       }
     }
   };
-  renderer.domElement.addEventListener('webglcontextrestored', () => { last = performance.now(); raf = requestAnimationFrame(frame); });
+  renderer.domElement.addEventListener('webglcontextrestored', () => { location.reload(); });
   raf = requestAnimationFrame(frame);
 }
 

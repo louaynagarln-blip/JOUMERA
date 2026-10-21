@@ -128,15 +128,18 @@ export function openProduct(p: Product): void {
   const price = canBuy ? `${money(Math.round(p.priceUSD! * 100))} ${p.demo ? `<span class="badge">${t('demoPrice')}</span>` : ''}` : t('priceUnavailable');
   el.innerHTML = `<div class="card" role="dialog" aria-modal="true">
     <button class="x" data-close aria-label="${t('close')}">&times;</button>
-    <div class="viewer" id="viewer"></div><div class="vstat" id="vstat"></div>
+    <div class="viewer" id="viewer">${p.image ? `<img src="${esc(p.image)}" alt="${esc(pick(p.name))}" style="width:100%;height:100%;object-fit:contain" />` : ''}</div><div class="vstat" id="vstat"></div>
     <h3>${esc(pick(p.name))}</h3><p>${esc(pick(p.desc))}</p>
     <div class="price">${price}</div>
     <div class="chips">${p.variants.map((v, i) => `<button class="chip${i ? '' : ' on'}" data-v="${esc(v.id)}">${esc(pick(v.label))}</button>`).join('')}</div>
     <button id="add" class="primary" ${canBuy ? '' : 'disabled'}>${t('addToCart')}</button></div>`;
   show('modal');
   viewer?.dispose();
-  viewer = new ProductViewer($('viewer'), p, (s) => { $('vstat').textContent = statusText(s); });
-  viewer.setTint(p.variants[0]?.color);
+  if (p.glb) {
+    $('viewer').replaceChildren();
+    viewer = new ProductViewer($('viewer'), p, (s) => { $('vstat').textContent = statusText(s); });
+    viewer.setTint(p.variants[0]?.color);
+  } else { viewer = null; $('vstat').textContent = statusText('placeholder'); }
   el.onclick = (e) => {
     const tg = e.target as HTMLElement;
     if (tg === el || tg.hasAttribute('data-close')) { hide('modal'); return; }
@@ -258,7 +261,6 @@ export function showFallback(reason: string): void {
     ${STORES.map((s) => `<h3 style="font-family:Georgia,serif;letter-spacing:.15em;color:var(--champ)">${esc(s.name)}</h3><div class="grid">${s.products.map((p) => `<div class="pcard"><b>${esc(pick(p.name))}</b><br><small>${p.demo ? t('demoPrice') : p.priceUSD != null && p.available ? money(Math.round(p.priceUSD * 100)) : t('priceUnavailable')}</small><br><button class="ghost" data-p="${p.slug}" style="margin-top:.5rem">${t('interact')}</button></div>`).join('')}</div>`).join('')}`;
   f.onclick = (e) => {
     const tg = e.target as HTMLElement;
-    if (tg.id === 'fb-search') openSearch();
     if (tg.id === 'fb-search') openSearch();
     if (tg.id === 'fb-cart') openCart();
     if (tg.id === 'fb-set') openSettings();

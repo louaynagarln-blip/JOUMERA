@@ -29,10 +29,14 @@ Use a Vercel Preview deployment on a development branch. The Supabase URL and pu
 
 ## Project layout
 
-- `src/world`: mall geometry and procedural material maps
+- `src/world`: mall architecture, optimized licensed GLB furnishings and PBR material maps
 - `src/controls`: walking, collision and pathfinding
 - `src/ui`: HUD, cart, settings and product viewer
 - `src/data`: demo catalog and bilingual search
 - `src/api/backend.ts`: V-Mall-only catalog and order RPC adapter
 - `admin-vmall.html`: V-Mall-only administrator and vendor workspace
 - `supabase/migrations`: isolated schema and role-checked management migrations
+
+## Current asset-first candidate
+
+Read `STATUS.md` for the launch blockers and `public/assets/LICENSES.md` for the seven integrated CC0 models. The source assets are included; no runtime dependency on Poly Haven exists. `public/assets/PROVENANCE.json` records downloads, checksums and the pinned optimization pipeline. Production promotion is blocked until actual visual, Android, commerce and authorization acceptance passes.

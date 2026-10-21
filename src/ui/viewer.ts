@@ -3,7 +3,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import type { Product } from '../data/catalog';
-import { makeProductMesh } from '../world/productMesh';
+import { disposeObject } from '../world/assets';
 
 export type ViewerStatus = 'loading' | 'ready' | 'placeholder' | 'error';
 
@@ -73,12 +73,12 @@ export class ProductViewer {
 
   private load(): void {
     const p = this.product;
-    const placeholder = () => { this.fit(makeProductMesh(p)); this.onStatus('placeholder'); };
+    const placeholder = () => { this.onStatus('placeholder'); };
     if (!p.glb) { placeholder(); return; }
     this.onStatus('loading');
     const loader = new GLTFLoader();
     loader.setMeshoptDecoder(MeshoptDecoder);
-    loader.load(p.glb, (gltf) => { if (this.disposed) return; this.fit(gltf.scene); this.onStatus('ready'); },
+    loader.load(p.glb, (gltf) => { if (this.disposed) { disposeObject(gltf.scene); return; } this.fit(gltf.scene); this.onStatus('ready'); },
       undefined, () => { if (this.disposed) return; placeholder(); this.onStatus('error'); });
   }
 
@@ -128,13 +128,7 @@ export class ProductViewer {
     this.disposed = true;
     cancelAnimationFrame(this.raf);
     this.ro?.disconnect();
-    this.root.traverse((o) => {
-      if (o instanceof THREE.Mesh) {
-        o.geometry.dispose();
-        const m = o.material as THREE.Material | THREE.Material[];
-        (Array.isArray(m) ? m : [m]).forEach((mm) => mm.dispose());
-      }
-    });
+    disposeObject(this.root);
     this.envTex?.dispose();
     if (this.renderer) {
       this.renderer.dispose();
