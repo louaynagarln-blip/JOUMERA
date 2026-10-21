@@ -75,6 +75,21 @@ describe('cart', () => {
   });
 });
 
+describe('HOCO flagship store', () => {
+  it('is discoverable by its name and navigable inside the mall', () => {
+    expect(searchStores('hoco').some(store => store.id === 'hoco')).toBe(true);
+    const hoco = STORES.find(store => store.id === 'hoco')!;
+    expect(storeRect(hoco)).toEqual({ minX: 8.25, maxX: 20, minZ: -1, maxZ: 9 });
+  });
+  it('shows only the confirmed connected item with its verified price and image', () => {
+    const hoco = STORES.find(store => store.id === 'hoco')!;
+    expect(hoco.products).toHaveLength(1);
+    expect(hoco.products[0]).toMatchObject({ demo: false, priceUSD: 24, available: true });
+    expect(hoco.products[0].image).toMatch(/^https:\/\//);
+    expect(hoco.products[0].images).toHaveLength(6);
+  });
+});
+
 describe('catalog search', () => {
   it('finds products in Arabic and English', () => {
     expect(searchProducts('حاسوب').some((hit) => hit.product.slug === 'demo-laptop-14')).toBe(true);
@@ -149,7 +164,7 @@ describe('walking acceptance', () => {
 });
 
 import { applyLiveCatalog, publicAsset } from '../src/data/liveCatalog';
-import { STORES, ALL_PRODUCTS } from '../src/data/catalog';
+import { STORES, ALL_PRODUCTS, storeRect } from '../src/data/catalog';
 
 describe('live catalogue boundary', () => {
   it('rejects executable and credential-bearing asset URLs', () => {
@@ -160,7 +175,8 @@ describe('live catalogue boundary', () => {
   });
   it('keeps empty live responses clearly labelled demo', () => {
     expect(applyLiveCatalog([])).toBe(0);
-    expect(ALL_PRODUCTS.every(p => p.demo)).toBe(true);
+    expect(ALL_PRODUCTS.filter(p => p.storeId !== 'hoco').every(p => p.demo)).toBe(true);
+    expect(ALL_PRODUCTS.find(p => p.storeId === 'hoco')?.demo).toBe(false);
   });
   it('integrates approved records instead of matching only demo slugs', () => {
     const before = STORES.map(s => s.products);

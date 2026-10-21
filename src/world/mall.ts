@@ -299,7 +299,7 @@ export async function buildMall(
       // Door header and a slim threshold create a readable shop entrance without blocking movement.
       box(mid - 0.13, mid + 0.13, 3.58, 3.73, st.zc - 1.5, st.zc + 1.5, brassMat, false, false);
       box(mid - 0.2, mid + 0.2, 0.02, 0.065, st.zc - 1.45, st.zc + 1.45, brassMat, false, false);
-      const signBacking = box(sx0 - 0.06, sx1 + 0.06, 4.05, 5.75, st.zc - 3.5, st.zc + 3.5, M.dark, false, false);
+      const signBacking = box(sx0 - 0.045, sx1 + 0.045, 4.32, 5.44, st.zc - 3.28, st.zc + 3.28, std(st.accent, 0.38, 0.28), false, false);
       signBacking.castShadow = false;
       const sign = label(st.name, 6.4, 1.12, '#f4d9a7', null, 10);
       sign.position.set(s * 8.01, 4.88, st.zc);
@@ -336,12 +336,13 @@ export async function buildMall(
       box(...rx(8.65,19.6),3.43,3.46,edge-.035,edge+.035,M.led,false,false);
     }
     for (const depth of [8.55,19.7]) box(...rx(depth-.1,depth+.1),3.34,3.47,zf+.22,zn-.22,M.ceil,false,false);
+    let hocoProductTexture: THREE.Texture | null = null;
     const [bx0, bx1] = rx(19.96, 20);
     box(bx0, bx1, 0, 3.6, zf, zn, std(st.accent, 0.56));
     // A fluted feature wall, bronze rails and halo-lit brand panel give each boutique a distinct back wall.
     const [fl0, fl1] = rx(19.82, 19.88);
     for (let z = zf + 0.35; z < zn; z += 0.34) box(fl0, fl1, 0.18, 3.45, z, z + 0.035, brassMat, false, false);
-    const signBase = box(bx0 - 0.025, bx1 + 0.02, 2.45, 3.52, st.zc - 3.1, st.zc + 3.1, M.dark, false, false);
+    const signBase = box(bx0 - 0.025, bx1 + 0.02, 2.45, 3.52, st.zc - 3.1, st.zc + 3.1, std(st.accent, 0.48, 0.18), false, false);
     signBase.castShadow = false;
     const sign = label(st.name, 5.5, 0.88, '#f4d9a7', null, 14);
     sign.position.set(s * 19.93, 2.9, st.zc);
@@ -385,11 +386,34 @@ export async function buildMall(
       }
     } else if (st.id === 'beauty-atelier') {
       for (const z of [st.zc-2.6,st.zc+2.6]) furnishings.place('ornate_mirror_01',group,s*19.48,1.35,z,1.5,-s*Math.PI/2);
+    } else if (st.id === 'hoco') {
+      // HOCO home-living salon: walkable furniture vignette using bundled CC0 glTF assets.
+      furnishings.place('sofa_03', group, s * 16.1, 0, st.zc - 0.2, 1.05, -s * Math.PI / 2, colliders);
+      furnishings.place('modern_coffee_table_01', group, s * 13.8, 0, st.zc - 0.2, .58, 0, colliders);
+      furnishings.place('modern_arm_chair_01', group, s * 11.5, 0, st.zc - 2.8, .92, s * Math.PI / 2, colliders);
+      furnishings.place('modern_arm_chair_01', group, s * 11.5, 0, st.zc + 2.5, .92, s * Math.PI / 2, colliders);
+      furnishings.place('modern_wooden_cabinet', group, s * 18.8, 0, st.zc - 3.25, 1.12, -s * Math.PI / 2, colliders);
+      furnishings.place('ceramic_vase_03', group, s * 18.8, 1.13, st.zc - 3.25, .48);
+      const imageProduct = st.products.find(p => p.image);
+      if (imageProduct?.image) {
+        const productImages = imageProduct.images?.length ? imageProduct.images : [imageProduct.image];
+        hocoProductTexture = loader.load(productImages[0], undefined, undefined, () => { });
+        hocoProductTexture.colorSpace = THREE.SRGBColorSpace; hocoProductTexture.anisotropy = aniso; extraDispose.push(hocoProductTexture);
+        // Show the real catalogue photography as a row of inset product vitrines along the entry wall.
+        productImages.slice(0, 5).forEach((url, i) => {
+          const z = st.zc - 3.25 + i * 1.62;
+          const frame = box(...rx(9.34, 9.48), 1.15, 2.62, z - .64, z + .64, M.frame, false, false); frame.castShadow = false;
+          const texture = i === 0 ? hocoProductTexture! : loader.load(url, undefined, undefined, () => { });
+          if (i > 0) { texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = aniso; extraDispose.push(texture); }
+          const display = new THREE.Mesh(new THREE.PlaneGeometry(1.05, 1.18), new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }));
+          display.position.set(s * 9.31, 1.88, z); display.rotation.y = s * Math.PI / 2; group.add(display);
+        });
+      }
     }
 
     // Real cabinet joinery replaces the identical procedural shelf stacks.
     for (const z of [st.zc-2.8,st.zc+2.8]) {
-      furnishings.place('modern_wooden_cabinet',group,s*18.8,0,z,1.05,-s*Math.PI/2,colliders);
+      if (st.id !== 'hoco') furnishings.place('modern_wooden_cabinet',group,s*18.8,0,z,1.05,-s*Math.PI/2,colliders);
       if(st.id==='home-gallery') furnishings.place('ceramic_vase_03',group,s*18.8,1.07,z,.5);
     }
     if(st.id==='style-lab') furnishings.place('ornate_mirror_01',group,s*19.45,.2,st.zc,2.4,-s*Math.PI/2);
@@ -399,7 +423,7 @@ export async function buildMall(
     if (st.id === 'home-gallery') {
       furnishings.place('sofa_03', group, s * 17, 0, st.zc, .85, s * Math.PI / 2, colliders);
       furnishings.place('modern_coffee_table_01', group, s * 14, 0, st.zc, .45, 0, colliders);
-    } else {
+    } else if (st.id !== 'hoco') {
       // Distinct, walk-around joinery: technology demo pods, a beauty bar and fashion plinths.
       const positions=st.id==='beauty-atelier'?[st.zc]:[st.zc-2.05,st.zc+2.05];
       const width=st.id==='tech-studio'?1.7:st.id==='style-lab'?1.05:1.35;
@@ -419,7 +443,10 @@ export async function buildMall(
       const x = home && i !== 0 ? s * 18.3 : s * 14;
       let obj: THREE.Object3D;
       const assetName = p.glb?.split('/').pop()?.replace('.glb', '') as AssetName;
-      if (ASSETS.includes(assetName)) {
+      if (p.image && hocoProductTexture) {
+        const photoMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.05), new THREE.MeshBasicMaterial({ map: hocoProductTexture, toneMapped: false }));
+        photoMesh.position.set(x, 1.25, z); photoMesh.rotation.y = -s * Math.PI / 2; group.add(photoMesh); obj = photoMesh;
+      } else if (ASSETS.includes(assetName)) {
         obj = furnishings.place(assetName, group, x, home ? .46 : .84, z, assetName === 'classic_laptop' ? .32 : .55);
       } else {
         obj = label(`${p.name.en}${p.demo ? ' · DEMO' : ''}`, 1.25, .48, '#e8d5b4', '#19262b', 2);

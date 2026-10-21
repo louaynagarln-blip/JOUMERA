@@ -64,3 +64,5 @@ button{font:inherit;color:inherit;cursor:pointer}
 #toast{position:fixed;left:50%;bottom:calc(var(--safe-b) + 24px);transform:translate(-50%,20px);z-index:60;background:#000c;border:1px solid #fff3;border-radius:999px;padding:.6rem 1.1rem;opacity:0;pointer-events:none;transition:.3s;max-width:90vw;text-align:center;font-size:.85rem}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.image-thumbs{display:flex;gap:.5rem;overflow:auto;padding:.55rem 0;scrollbar-width:thin}.image-thumb{flex:0 0 56px;height:56px;padding:2px;border:1px solid #ffffff35;border-radius:9px;background:#1b1a17;overflow:hidden}.image-thumb.on{border-color:var(--champ);box-shadow:0 0 0 1px var(--champ)}.image-thumb img{width:100%;height:100%;object-fit:cover}

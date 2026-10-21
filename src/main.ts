@@ -13,7 +13,7 @@ import * as ui from './ui/ui';
 
 type Tier = 'low' | 'medium' | 'high';
 const TIERS: Tier[] = ['low', 'medium', 'high'];
-const PIXEL_CAP: Record<Tier, number> = { low: 0.85, medium: 1.05, high: 1.3 };
+const PIXEL_CAP: Record<Tier, number> = { low: 1.05, medium: 1.55, high: 2 };
 const SHADOW: Record<Tier, number> = { low: 0, medium: 0, high: 2048 };
 
 const settings: Settings = loadSettings();
@@ -34,7 +34,7 @@ async function boot(): Promise<void> {
   let renderer: THREE.WebGLRenderer;
   try {
     const mobile = matchMedia('(pointer:coarse)').matches;
-    renderer = new THREE.WebGLRenderer({ antialias: !mobile, powerPreference: 'high-performance' });
+    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', stencil: false });
   } catch (e) {
     ui.showFallback('WebGL unavailable');
     return;
@@ -79,10 +79,12 @@ async function boot(): Promise<void> {
   applyPlayerSettings();
 
   // ----- quality -----
-  let tier: Tier = settings.quality === 'auto' ? (matchMedia('(pointer:coarse)').matches ? 'low' : 'high') : settings.quality;
+  let tier: Tier = settings.quality === 'auto' ? (matchMedia('(pointer:coarse)').matches ? 'medium' : 'high') : settings.quality;
   let pixelScale = 1;
+  let appliedRatio = 0;
   const applyQuality = () => {
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, PIXEL_CAP[tier]) * pixelScale);
+    const ratio = Math.max(1, Math.min(window.devicePixelRatio || 1, PIXEL_CAP[tier]) * pixelScale);
+    if (Math.abs(ratio - appliedRatio) > 0.01) { renderer.setPixelRatio(ratio); appliedRatio = ratio; }
     const sm = SHADOW[tier];
     mall.sun.castShadow = sm > 0;
     if (sm > 0 && mall.sun.shadow.mapSize.x !== sm) {
@@ -104,7 +106,7 @@ async function boot(): Promise<void> {
     saveSettings(s);
     applyPlayerSettings();
     if (s.quality !== 'auto' && s.quality !== tier) { tier = s.quality; pixelScale = 1; applyQuality(); }
-    if (s.quality === 'auto') { tier = matchMedia('(pointer:coarse)').matches ? 'low' : 'high'; pixelScale = 1; applyQuality(); }
+    if (s.quality === 'auto') { tier = matchMedia('(pointer:coarse)').matches ? 'medium' : 'high'; pixelScale = 1; applyQuality(); }
   };
   ui.hooks.onModal = (open) => {
     if (open) player.releaseLock();
@@ -149,7 +151,7 @@ async function boot(): Promise<void> {
   // ----- main loop -----
   let raf = 0;
   let last = performance.now();
-  let fpsFrames = 0, fpsTime = 0;
+  let fpsFrames = 0, fpsTime = 0, slowWindows = 0, lastQualityChange = 0;
   let nearest: Pickable | null = null;
   let curStore: StoreDef | null = null;
   const frame = (now: number) => {
@@ -177,13 +179,14 @@ async function boot(): Promise<void> {
 
     if (player.enabled && settings.quality === 'auto') {
       fpsFrames++; fpsTime += dt;
-      if (fpsTime > 3) {
+      if (fpsTime > 5) {
         const fps = fpsFrames / fpsTime;
         fpsFrames = 0; fpsTime = 0;
-        if (fps < 24) {
-          if (pixelScale > 0.75) pixelScale -= 0.25;
-          else if (tier !== 'low') tier = TIERS[TIERS.indexOf(tier) - 1];
-          else return;
+        slowWindows = fps < 22 ? slowWindows + 1 : 0;
+        // Hysteresis: one downgrade after two consecutive slow windows, never oscillate or resize every few seconds.
+        if (slowWindows >= 2 && now - lastQualityChange > 15000 && tier !== 'low') {
+          tier = TIERS[TIERS.indexOf(tier) - 1];
+          slowWindows = 0; lastQualityChange = now;
           applyQuality();
           ui.toast(t('lowFps'));
         }

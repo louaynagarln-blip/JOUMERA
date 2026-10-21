@@ -18,6 +18,7 @@ export interface Product {
   /** Path under /public, e.g. /assets/models/x.glb. Only use a model that matches the displayed item. */
   glb?: string;
   image?: string;
+  images?: string[];
 }
 
 export interface StoreDef {
@@ -92,6 +93,13 @@ export const STORES: StoreDef[] = [
       P('beauty-atelier', 'demo-face-oil', 'Face Oil', 'زيت للوجه', 60, 'bottle', 0x3f6b5d),
       P('beauty-atelier', 'demo-hand-cream', 'Hand Cream', 'كريم لليدين', 28, 'bottle', 0xe9e4da),
     ],
+  },
+  {
+    id: 'hoco', side: 1, zc: 4, name: 'HOCO', accent: 0x28564c, floor: 0x7a684e,
+    tagline: { en: 'Home, textiles & living', ar: 'المنزل والمفروشات ونمط الحياة' },
+    // This item is from the connected HOCO catalogue. Its image and $24 price are read from Supabase;
+    // checkout stays disabled until the commercial launch gate is explicitly enabled.
+    products: [{ slug: 'hoco-sherpa-double-220x240', storeId: 'hoco', name: { en: 'Sherpa Blanket Double 220×240 cm', ar: 'حرام شيربا مجوز 220×240 سم' }, desc: { en: 'Sherpa blanket, double size 220×240 cm.', ar: 'حرام شيربا مقاس مجوز 220×240 سم.' }, priceUSD: 24, demo: false, available: true, variants: [], shape: 'vase', color: 0xe9e4da, image: 'https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599815430-c7266745-e794-441f-8e84-a63dfb8c5b2a.jpg', images: ['https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599815430-c7266745-e794-441f-8e84-a63dfb8c5b2a.jpg','https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599818441-9ae4ce31-fa2b-431e-b6cf-ef18e5a67448.jpg','https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599821565-5f88a851-a684-498f-9f50-b290c7d5bd89.jpg','https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599824646-34a3b051-2415-4492-a43b-43fe1a09400a.jpg','https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599828358-52dadc52-f3f4-4bb4-8801-b4e19604e630.jpg','https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599832196-ff3768d9-04b7-4927-88c5-ebb49998c7d8.jpg'] }],
   },
 ];
 

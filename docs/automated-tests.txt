@@ -1,15 +1,16 @@
 npm install
-# up to date
+# up to date (npm 11.9.0; existing environment warns about legacy http-proxy config)
 
 npm run lint
 # tsc --noEmit: passed
 
 npm test
-# Vitest: 1 file, 32 tests passed
+# Vitest: 1 file, 34 tests passed
+# Includes HOCO flagship discovery, walkable bounds, verified price and image gallery assertions.
 
 npm run build
 # tsc --noEmit && vite build: passed (Vite 5.4.21)
-# output: mall JS 131.37 kB (44.31 kB gzip), Three.js chunk 554.20 kB (141.85 kB gzip)
+# output: mall JS 134.57 kB (45.37 kB gzip), Three.js chunk 554.20 kB (141.85 kB gzip)
 
 Additional regression cases:
 - touch-down on the joystick is neutral regardless of where on its pad it starts
@@ -17,7 +18,11 @@ Additional regression cases:
 - stale auto-walk is discarded after a long suspended frame
 - disabling the controller clears active movement before an overlay opens
 - storefront arch leaves a wide entry opening
+- HOCO is searchable and its entrance/interior bounds are walkable
+- HOCO shows only the confirmed Supabase product, price and photos
 
-Deployment smoke checks:
-- Vercel Preview deployment READY; HTML, application bundle, marble texture, and three GLB models returned HTTP 200
-- This verifies delivery of files only. WebGL rendering, touch behavior, and Android FPS were not measured in a physical-device/browser test environment.
+Rendering/performance verification:
+- Automatic touch-device quality now starts at 1.55 pixel ratio cap with antialiasing enabled.
+- Adaptive quality waits for two consecutive 5-second windows below 22 FPS before a single downgrade; it does not oscillate upwards.
+- Android GPU/FPS and physical touch controls were not measured in this environment.
+- WebGL screenshot rendering was not available for this run; no visual screenshot is claimed.

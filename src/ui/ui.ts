@@ -136,7 +136,7 @@ export function openProduct(p: Product): void {
   const price = canBuy ? `${money(Math.round(p.priceUSD! * 100))} ${p.demo ? `<span class="badge">${t('demoPrice')}</span>` : ''}` : t('priceUnavailable');
   el.innerHTML = `<div class="card" role="dialog" aria-modal="true">
     <button class="x" data-close aria-label="${t('close')}">&times;</button>
-    <div class="viewer" id="viewer">${p.image ? `<img src="${esc(p.image)}" alt="${esc(pick(p.name))}" style="width:100%;height:100%;object-fit:contain" />` : ''}</div><div class="vstat" id="vstat"></div>
+    <div class="viewer" id="viewer">${p.image ? `<img id="product-image" src="${esc(p.image)}" alt="${esc(pick(p.name))}" style="width:100%;height:100%;object-fit:contain" />` : ''}</div>${(p.images?.length ?? 0) > 1 ? `<div class="image-thumbs" aria-label="${esc(pick(p.name))}">${p.images!.map((src,i)=>`<button class="image-thumb${i===0?' on':''}" data-image="${esc(src)}" aria-label="${i+1}"><img src="${esc(src)}" alt="" loading="lazy" /></button>`).join('')}</div>` : ''}<div class="vstat" id="vstat"></div>
     <h3>${esc(pick(p.name))}</h3><p>${esc(pick(p.desc))}</p>
     <div class="price">${price}</div>
     <div class="chips">${p.variants.map((v, i) => `<button class="chip${i ? '' : ' on'}" data-v="${esc(v.id)}">${esc(pick(v.label))}</button>`).join('')}</div>
@@ -151,6 +151,8 @@ export function openProduct(p: Product): void {
   el.onclick = (e) => {
     const tg = e.target as HTMLElement;
     if (tg === el || tg.hasAttribute('data-close')) { hide('modal'); return; }
+    const thumb = tg.closest<HTMLElement>('[data-image]');
+    if (thumb) { $('product-image').setAttribute('src', thumb.dataset.image!); el.querySelectorAll('.image-thumb').forEach(x => x.classList.toggle('on', x === thumb)); return; }
     const chip = tg.closest<HTMLElement>('.chip');
     if (chip) {
       variant = chip.dataset.v!;
