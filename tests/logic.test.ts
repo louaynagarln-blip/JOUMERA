@@ -81,12 +81,17 @@ describe('HOCO flagship store', () => {
     const hoco = STORES.find(store => store.id === 'hoco')!;
     expect(storeRect(hoco)).toEqual({ minX: 8.25, maxX: 20, minZ: -1, maxZ: 9 });
   });
-  it('shows only the confirmed connected item with its verified price and image', () => {
+  it('shows owner-supplied electronics as display-only until stock and prices are verified', () => {
     const hoco = STORES.find(store => store.id === 'hoco')!;
-    expect(hoco.products).toHaveLength(1);
-    expect(hoco.products[0]).toMatchObject({ demo: false, priceUSD: 24, available: true });
-    expect(hoco.products[0].image).toMatch(/^https:\/\//);
-    expect(hoco.products[0].images).toHaveLength(6);
+    expect(hoco.tagline.en).toMatch(/electronics/i);
+    expect(hoco.products).toHaveLength(3);
+    expect(hoco.products.every(p => !p.demo && p.priceUSD === null && !p.available)).toBe(true);
+    expect(hoco.products.map(p => p.image)).toEqual([
+      '/assets/hoco/hoco-dv203-dual-lensdigital-camera.webp',
+      '/assets/hoco/hoco-dv102-4k-anti-shake-sports-camera.webp',
+      '/assets/hoco/Hoco-DFM01-LED-Indicator-BT-FM-Transmitter-38W-Black-FM-Transmitter-HOCO-Star-Light-Kuwait.webp',
+    ]);
+    expect(totalCents(addLine([], hoco.products[0].slug, ''), slug => hoco.products.find(p => p.slug === slug)?.priceUSD ?? null)).toBe(0);
   });
 });
 
@@ -177,6 +182,12 @@ describe('live catalogue boundary', () => {
     expect(applyLiveCatalog([])).toBe(0);
     expect(ALL_PRODUCTS.filter(p => p.storeId !== 'hoco').every(p => p.demo)).toBe(true);
     expect(ALL_PRODUCTS.find(p => p.storeId === 'hoco')?.demo).toBe(false);
+  });
+  it('does not map unrelated wholesale feed rows into the HOCO electronics display', () => {
+    const before = STORES.find(s => s.id === 'hoco')!.products;
+    const count = applyLiveCatalog([{slug:'bedding-row',store_slug:'hoco',name_en:'Sherpa Blanket',name_ar:null,retail_price:24,in_stock:true}]);
+    expect(count).toBe(0);
+    expect(STORES.find(s => s.id === 'hoco')!.products).toBe(before);
   });
   it('integrates approved records instead of matching only demo slugs', () => {
     const before = STORES.map(s => s.products);

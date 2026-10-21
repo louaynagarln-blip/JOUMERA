@@ -121,7 +121,8 @@ export async function buildMall(
     wood: woodMat,
     stone: std(0xf0ece4, 0.3),
     glass: new THREE.MeshPhysicalMaterial({ color: 0xdce7e6, roughness: 0.08, metalness: 0.18, clearcoat: 0.6, clearcoatRoughness: 0.12, transparent: true, opacity: 0.14, depthWrite: false, side: THREE.DoubleSide }),
-    glassTint: new THREE.MeshPhysicalMaterial({ color: 0xbacbc9, roughness: 0.11, metalness: 0.12, clearcoat: 0.75, transparent: true, opacity: 0.34, depthWrite: false, side: THREE.DoubleSide }),
+    // A bright frosted skylight avoids the black, environment-less glass seen on mobile browsers.
+    glassTint: new THREE.MeshPhysicalMaterial({ color: 0xd9e0db, roughness: 0.62, metalness: 0.02, clearcoat: 0.08, side: THREE.DoubleSide, emissive: 0x534f46, emissiveIntensity: 0.22 }),
     frame: darkMetal,
     led,
     light: new THREE.MeshBasicMaterial({ color: 0xfff3dc }),
@@ -336,7 +337,7 @@ export async function buildMall(
       box(...rx(8.65,19.6),3.43,3.46,edge-.035,edge+.035,M.led,false,false);
     }
     for (const depth of [8.55,19.7]) box(...rx(depth-.1,depth+.1),3.34,3.47,zf+.22,zn-.22,M.ceil,false,false);
-    let hocoProductTexture: THREE.Texture | null = null;
+    const hocoProductTextures = new Map<Product, THREE.Texture>();
     const [bx0, bx1] = rx(19.96, 20);
     box(bx0, bx1, 0, 3.6, zf, zn, std(st.accent, 0.56));
     // A fluted feature wall, bronze rails and halo-lit brand panel give each boutique a distinct back wall.
@@ -387,27 +388,31 @@ export async function buildMall(
     } else if (st.id === 'beauty-atelier') {
       for (const z of [st.zc-2.6,st.zc+2.6]) furnishings.place('ornate_mirror_01',group,s*19.48,1.35,z,1.5,-s*Math.PI/2);
     } else if (st.id === 'hoco') {
-      // HOCO home-living salon: walkable furniture vignette using bundled CC0 glTF assets.
-      furnishings.place('sofa_03', group, s * 16.1, 0, st.zc - 0.2, 1.05, -s * Math.PI / 2, colliders);
-      furnishings.place('modern_coffee_table_01', group, s * 13.8, 0, st.zc - 0.2, .58, 0, colliders);
-      furnishings.place('modern_arm_chair_01', group, s * 11.5, 0, st.zc - 2.8, .92, s * Math.PI / 2, colliders);
-      furnishings.place('modern_arm_chair_01', group, s * 11.5, 0, st.zc + 2.5, .92, s * Math.PI / 2, colliders);
-      furnishings.place('modern_wooden_cabinet', group, s * 18.8, 0, st.zc - 3.25, 1.12, -s * Math.PI / 2, colliders);
-      furnishings.place('ceramic_vase_03', group, s * 18.8, 1.13, st.zc - 3.25, .48);
-      const imageProduct = st.products.find(p => p.image);
-      if (imageProduct?.image) {
-        const productImages = imageProduct.images?.length ? imageProduct.images : [imageProduct.image];
-        hocoProductTexture = loader.load(productImages[0], undefined, undefined, () => { });
-        hocoProductTexture.colorSpace = THREE.SRGBColorSpace; hocoProductTexture.anisotropy = aniso; extraDispose.push(hocoProductTexture);
-        // Show the real catalogue photography as a row of inset product vitrines along the entry wall.
-        productImages.slice(0, 5).forEach((url, i) => {
-          const z = st.zc - 3.25 + i * 1.62;
-          const frame = box(...rx(9.34, 9.48), 1.15, 2.62, z - .64, z + .64, M.frame, false, false); frame.castShadow = false;
-          const texture = i === 0 ? hocoProductTexture! : loader.load(url, undefined, undefined, () => { });
-          if (i > 0) { texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = aniso; extraDispose.push(texture); }
-          const display = new THREE.Mesh(new THREE.PlaneGeometry(1.05, 1.18), new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }));
-          display.position.set(s * 9.31, 1.88, z); display.rotation.y = s * Math.PI / 2; group.add(display);
-        });
+      // Compact electronics showroom: real owner-supplied HOCO product photography in lit wall vitrines.
+      st.products.slice(0, 3).forEach((product, i) => {
+        if (!product.image) return;
+        const z = st.zc - 3.15 + i * 3.05;
+        const texture = loader.load(product.image);
+        texture.colorSpace = THREE.SRGBColorSpace; texture.anisotropy = aniso; extraDispose.push(texture);
+        hocoProductTextures.set(product, texture);
+        box(...rx(19.36, 19.7), 0.96, 2.98, z - 1.25, z + 1.25, M.dark, false, false);
+        box(...rx(19.28, 19.36), 0.9, 3.02, z - 1.29, z + 1.29, brassMat, false, false);
+        const photo = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.55), new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide }));
+        photo.position.set(s * 19.23, 2.0, z); photo.rotation.y = -s * Math.PI / 2; group.add(photo);
+        box(...rx(18.25, 19.18), 0.78, 0.86, z - 1.25, z + 1.25, woodMat, false, false).castShadow = true;
+        const nameplate = label('PRICE NOT VERIFIED', 2.2, 0.28, '#f2d7a3', null, 3);
+        nameplate.position.set(s * 19.18, 1.05, z); nameplate.rotation.y = -s * Math.PI / 2;
+        pickables.push({ product, obj: photo, pos: new THREE.Vector3(s * 18.85, 1.8, z) });
+      });
+      // A dark anodized service island with a real brass reveal anchors the centre without closing the aisle.
+      retailCounter(group, colliders, s * 13.1, st.zc, 1.55, 3.6, .92, M.dark, M.stone, brassMat);
+      for (const z of [st.zc - 1.15, st.zc, st.zc + 1.15]) {
+        const screen = box(...rx(12.55, 13.62), 0.93, 1.02, z - .39, z + .39, std(0x171b20, .24, .35), false, false);
+        screen.castShadow = false;
+      }
+      for (const z of [st.zc - 4.2, st.zc + 4.2]) {
+        const edge = box(...rx(10.4, 18.6), 0.03, 0.16, z - .045, z + .045, brassMat, false, false);
+        edge.castShadow = false;
       }
     }
 
@@ -433,6 +438,7 @@ export async function buildMall(
         st.id==='style-lab'?M.dark:M.stone,brassMat);
     }
     // counter
+    if (st.id === 'hoco') return; // HOCO pickables are the three verified product-photo vitrines above.
     const [c0, c1] = rx(10, 10.8);
     box(c0, c1, 0, 1.05, st.zc + 2.9, st.zc + 4.8, M.dark, true);
     box(c0 - 0.02, c1 + 0.02, 1.05, 1.09, st.zc + 2.88, st.zc + 4.82, M.gold, false);
@@ -443,8 +449,8 @@ export async function buildMall(
       const x = home && i !== 0 ? s * 18.3 : s * 14;
       let obj: THREE.Object3D;
       const assetName = p.glb?.split('/').pop()?.replace('.glb', '') as AssetName;
-      if (p.image && hocoProductTexture) {
-        const photoMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.05), new THREE.MeshBasicMaterial({ map: hocoProductTexture, toneMapped: false }));
+      if (p.image && hocoProductTextures.has(p)) {
+        const photoMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.05), new THREE.MeshBasicMaterial({ map: hocoProductTextures.get(p)!, toneMapped: false, side: THREE.DoubleSide }));
         photoMesh.position.set(x, 1.25, z); photoMesh.rotation.y = -s * Math.PI / 2; group.add(photoMesh); obj = photoMesh;
       } else if (ASSETS.includes(assetName)) {
         obj = furnishings.place(assetName, group, x, home ? .46 : .84, z, assetName === 'classic_laptop' ? .32 : .55);

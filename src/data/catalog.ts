@@ -1,7 +1,7 @@
 export type Lang = 'en' | 'ar';
 export interface L10n { en: string; ar: string }
 export interface Variant { id: string; label: L10n; color?: number }
-export type Shape = 'laptop' | 'speaker' | 'vase' | 'bottle' | 'bag' | 'lamp';
+export type Shape = 'laptop' | 'speaker' | 'vase' | 'bottle' | 'bag' | 'lamp' | 'camera';
 
 export interface Product {
   slug: string;
@@ -95,11 +95,14 @@ export const STORES: StoreDef[] = [
     ],
   },
   {
-    id: 'hoco', side: 1, zc: 4, name: 'HOCO', accent: 0x28564c, floor: 0x7a684e,
-    tagline: { en: 'Home, textiles & living', ar: 'المنزل والمفروشات ونمط الحياة' },
-    // This item is from the connected HOCO catalogue. Its image and $24 price are read from Supabase;
-    // checkout stays disabled until the commercial launch gate is explicitly enabled.
-    products: [{ slug: 'hoco-sherpa-double-220x240', storeId: 'hoco', name: { en: 'Sherpa Blanket Double 220×240 cm', ar: 'حرام شيربا مجوز 220×240 سم' }, desc: { en: 'Sherpa blanket, double size 220×240 cm.', ar: 'حرام شيربا مقاس مجوز 220×240 سم.' }, priceUSD: 24, demo: false, available: true, variants: [], shape: 'vase', color: 0xe9e4da, image: 'https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599815430-c7266745-e794-441f-8e84-a63dfb8c5b2a.jpg', images: ['https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599815430-c7266745-e794-441f-8e84-a63dfb8c5b2a.jpg','https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599818441-9ae4ce31-fa2b-431e-b6cf-ef18e5a67448.jpg','https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599821565-5f88a851-a684-498f-9f50-b290c7d5bd89.jpg','https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599824646-34a3b051-2415-4492-a43b-43fe1a09400a.jpg','https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599828358-52dadc52-f3f4-4bb4-8801-b4e19604e630.jpg','https://aiizdgxutredbzcrkkjq.supabase.co/storage/v1/object/public/hoco-media/1790599832196-ff3768d9-04b7-4927-88c5-ebb49998c7d8.jpg'] }],
+    id: 'hoco', side: 1, zc: 4, name: 'HOCO', accent: 0x842a31, floor: 0x292629,
+    tagline: { en: 'HOCO electronics & accessories', ar: 'إلكترونيات وإكسسوارات HOCO' },
+    // Verified product photography supplied by the user. Prices, stock and 3D product models were not supplied.
+    products: [
+      { slug: 'hoco-dv203-camera', storeId: 'hoco', name: { en: 'HOCO DV203 Dual-Lens Digital Camera', ar: 'كاميرا HOCO DV203 الرقمية بعدستين' }, desc: { en: 'Display item. Product photo supplied by the store owner. Retail price and stock have not been confirmed; orders are disabled.', ar: 'معروض في المتجر. صورة المنتج مقدمة من صاحب المتجر. لم يُعتمد السعر أو المخزون، والطلبات معطلة.' }, priceUSD: null, demo: false, available: false, variants: [], shape: 'camera', color: 0xffffff, image: '/assets/hoco/hoco-dv203-dual-lensdigital-camera.webp' },
+      { slug: 'hoco-dv102-action-camera', storeId: 'hoco', name: { en: 'HOCO DV102 4K Action Camera', ar: 'كاميرا الحركة HOCO DV102 بدقة 4K' }, desc: { en: 'Display item. Product photo supplied by the store owner. Retail price and stock have not been confirmed; orders are disabled.', ar: 'معروض في المتجر. صورة المنتج مقدمة من صاحب المتجر. لم يُعتمد السعر أو المخزون، والطلبات معطلة.' }, priceUSD: null, demo: false, available: false, variants: [], shape: 'camera', color: 0x222222, image: '/assets/hoco/hoco-dv102-4k-anti-shake-sports-camera.webp' },
+      { slug: 'hoco-dfm01-car-transmitter', storeId: 'hoco', name: { en: 'HOCO DFM01 Bluetooth FM Transmitter', ar: 'مرسل HOCO DFM01 للسيارة مع Bluetooth وFM' }, desc: { en: 'Display item. Product photo supplied by the store owner. Retail price and stock have not been confirmed; orders are disabled.', ar: 'معروض في المتجر. صورة المنتج مقدمة من صاحب المتجر. لم يُعتمد السعر أو المخزون، والطلبات معطلة.' }, priceUSD: null, demo: false, available: false, variants: [], shape: 'camera', color: 0x202024, image: '/assets/hoco/Hoco-DFM01-LED-Indicator-BT-FM-Transmitter-38W-Black-FM-Transmitter-HOCO-Star-Light-Kuwait.webp' },
+    ],
   },
 ];
 

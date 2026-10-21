@@ -11,6 +11,9 @@ export function publicAsset(value: string | null | undefined): string | undefine
 export function applyLiveCatalog(rows: CatalogRow[]): number {
   let count = 0;
   for (const store of STORES) {
+    // HOCO display imagery is verified, but its sales prices/stock have not been matched to the connected bedding feed.
+    // Keep the owner-supplied electronics display rather than relabel unrelated feed rows as HOCO inventory.
+    if (store.id === 'hoco') continue;
     const products: Product[] = rows.filter(r => r.store_slug === store.id && r.slug && Number.isFinite(Number(r.retail_price)) && Number(r.retail_price) > 0).map(r => {
       const variants: Variant[] = Array.isArray(r.variants) ? r.variants.filter((v): v is Variant => Boolean(v && typeof v === 'object' && typeof v.id === 'string' && v.label && typeof v.label.en === 'string' && typeof v.label.ar === 'string')) : [];
       return {
