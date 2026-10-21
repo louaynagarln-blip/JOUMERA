@@ -219,6 +219,7 @@ describe('management operations',()=>{
 
 import * as THREE from 'three';
 import {boutiquePortal,retailCounter} from '../src/world/retailFixtures';
+import {makeProductMesh} from '../src/world/productMesh';
 describe('retail furnishing clearance',()=>{
  it('frames a wide, unobstructed store entrance with an arched display portal',()=>{
   const group=new THREE.Group();boutiquePortal(group,8.25,-4,0x345678,1);
@@ -236,5 +237,19 @@ describe('retail furnishing clearance',()=>{
   expect(b.min.x).toBeGreaterThanOrEqual(c.minX-.001);expect(b.max.x).toBeLessThanOrEqual(c.maxX+.001);
   expect(b.min.z).toBeGreaterThanOrEqual(c.minZ-.001);expect(b.max.z).toBeLessThanOrEqual(c.maxZ+.001);
   expect(b.max.y).toBeCloseTo(.842,2);
+ });
+});
+
+describe('store product display meshes',()=>{
+ it('renders every non-GLB demo product as a visible 3D silhouette',()=>{
+  const displayProducts=ALL_PRODUCTS.filter(p=>p.demo&&!p.glb&&!p.image);
+  expect(displayProducts.length).toBeGreaterThan(0);
+  for(const product of displayProducts){
+   const model=makeProductMesh(product);model.updateMatrixWorld(true);
+   const bounds=new THREE.Box3().setFromObject(model);
+   expect(model.children.length,product.slug).toBeGreaterThan(0);
+   expect(bounds.isEmpty(),product.slug).toBe(false);
+   expect(bounds.getSize(new THREE.Vector3()).length(),product.slug).toBeGreaterThan(.05);
+  }
  });
 });
