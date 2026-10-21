@@ -42,3 +42,27 @@ export function moveCircle(x: number, z: number, dx: number, dz: number, r: numb
   }
   return { x, z };
 }
+
+/** Exact swept-circle clearance against XZ boxes, including very thin glass. */
+export function clearWalkSegment(a: { x: number; z: number }, c: { x: number; z: number }, radius: number, boxes: Box[]): boolean {
+  if (![a.x, a.z, c.x, c.z, radius].every(Number.isFinite) || radius <= 0) return false;
+  const dx = c.x - a.x, dz = c.z - a.z;
+  const length2 = dx * dx + dz * dz;
+  const pointDistance = (p: {x: number; z: number}, b: Box) =>
+    Math.max(b.minX - p.x, 0, p.x - b.maxX) ** 2 + Math.max(b.minZ - p.z, 0, p.z - b.maxZ) ** 2;
+  for (const b of boxes) {
+    let lo = 0, hi = 1;
+    for (const [origin, delta, min, max] of [[a.x, dx, b.minX, b.maxX], [a.z, dz, b.minZ, b.maxZ]]) {
+      if (Math.abs(delta) < 1e-12) { if (origin < min || origin > max) hi = -1; }
+      else { const u = (min - origin) / delta, v = (max - origin) / delta; lo = Math.max(lo, Math.min(u, v)); hi = Math.min(hi, Math.max(u, v)); }
+    }
+    if (lo <= hi) return false;
+    let distance2 = Math.min(pointDistance(a, b), pointDistance(c, b));
+    for (const x of [b.minX, b.maxX]) for (const z of [b.minZ, b.maxZ]) {
+      const t = length2 > 0 ? Math.max(0, Math.min(1, ((x - a.x) * dx + (z - a.z) * dz) / length2)) : 0;
+      distance2 = Math.min(distance2, (x - a.x - t * dx) ** 2 + (z - a.z - t * dz) ** 2);
+    }
+    if (distance2 < radius * radius - 1e-9) return false;
+  }
+  return true;
+}

@@ -125,6 +125,7 @@ async function boot(): Promise<void> {
     if (!st || !player.enabled) return;
     const path = nav.findPath(player.x, player.z, st.side * 11.5, st.zc);
     if (path && path.length) player.walkPath(path);
+    else { player.cancelPath(); ui.toast(t('routeUnavailable')); }
   };
   ui.hooks.onStopWalk = () => { player.stop(); ui.setAutoWalk(false); };
   player.onAutoWalkEnd = (why) => { if (why === 'stuck') ui.toast(t('stuck')); };

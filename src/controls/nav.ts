@@ -1,4 +1,4 @@
-import type { Box } from './collision';
+import { clearWalkSegment, type Box } from './collision';
 
 export interface Pt { x: number; z: number }
 interface Bounds { minX: number; maxX: number; minZ: number; maxZ: number }
@@ -10,8 +10,13 @@ export class NavGrid {
   private readonly h: number;
   private readonly blocked: Uint8Array;
   private readonly b: Bounds;
+  private readonly boxes: Box[];
+  private readonly bodyRadius: number;
 
-  constructor(boxes: Box[], bounds: Bounds, radius = 0.45) {
+  constructor(boxes: Box[], bounds: Bounds, radius = 0.45, bodyRadius = 0.3) {
+    if (!(bodyRadius > 0 && radius >= bodyRadius)) throw new Error('Invalid navigation clearance');
+    this.boxes = boxes.map(b => ({ ...b }));
+    this.bodyRadius = bodyRadius;
     const b = bounds;
     this.b = bounds;
     this.w = Math.ceil((b.maxX - b.minX) / this.cs);
@@ -47,20 +52,21 @@ export class NavGrid {
   }
   isFree(x: number, z: number): boolean { if (x < this.b.minX || x >= this.b.maxX || z < this.b.minZ || z >= this.b.maxZ) return false; const [i, j] = this.cell(x, z); return this.free(i, j); }
 
-  private nearestFree(i: number, j: number): [number, number] | null {
-    if (this.free(i, j)) return [i, j];
-    for (let r = 1; r < 12; r++) {
-      for (let dj = -r; dj <= r; dj++) {
-        for (let di = -r; di <= r; di++) {
-          if (Math.max(Math.abs(di), Math.abs(dj)) !== r) continue;
-          if (this.free(i + di, j + dj)) return [i + di, j + dj];
-        }
-      }
+  private nearestReachable(point: Pt): [number, number] | null {
+    const [i, j] = this.cell(point.x, point.z);
+    const candidates: Array<{ cell: [number, number]; distance: number }> = [];
+    // Escape only the navigation margin, never teleport or search through a wall.
+    for (let dj = -4; dj <= 4; dj++) for (let di = -4; di <= 4; di++) {
+      if (!this.free(i + di, j + dj)) continue;
+      const p = this.center(i + di, j + dj);
+      candidates.push({ cell: [i + di, j + dj], distance: Math.hypot(p.x - point.x, p.z - point.z) });
     }
-    return null;
+    candidates.sort((a, b) => a.distance - b.distance);
+    return candidates.find(c => c.distance <= 1.6 && clearWalkSegment(point, this.center(...c.cell), this.bodyRadius, this.boxes))?.cell ?? null;
   }
 
   private los(a: Pt, c: Pt): boolean {
+    if (!clearWalkSegment(a, c, this.bodyRadius, this.boxes)) return false;
     const d = Math.hypot(c.x - a.x, c.z - a.z);
     const n = Math.max(1, Math.ceil(d / 0.2));
     for (let k = 0; k <= n; k++) {
@@ -71,10 +77,13 @@ export class NavGrid {
   }
 
   findPath(sx: number, sz: number, gx: number, gz: number): Pt[] | null {
-    if (!this.isFree(sx, sz) || gx < this.b.minX || gx >= this.b.maxX || gz < this.b.minZ || gz >= this.b.maxZ) return null;
+    const start = { x: sx, z: sz }, goal = { x: gx, z: gz };
+    const inside = (p: Pt) => p.x >= this.b.minX && p.x < this.b.maxX && p.z >= this.b.minZ && p.z < this.b.maxZ;
+    if (![sx, sz, gx, gz].every(Number.isFinite) || !inside(start) || !inside(goal)) return null;
+    if (!clearWalkSegment(start, start, this.bodyRadius, this.boxes) || !clearWalkSegment(goal, goal, this.bodyRadius, this.boxes)) return null;
     if (this.isFree(gx, gz) && this.los({x: sx,z: sz}, {x: gx,z: gz})) return [{x: gx,z: gz}];
-    const s = this.nearestFree(...this.cell(sx, sz));
-    const g = this.nearestFree(...this.cell(gx, gz));
+    const s = this.nearestReachable(start);
+    const g = this.nearestReachable(goal);
     if (!s || !g) return null;
     const W = this.w;
     const N = W * this.h;
@@ -142,7 +151,8 @@ export class NavGrid {
     const cells: Pt[] = [];
     for (let id = gid; id !== -1; id = parent[id]) cells.push(this.center(id % W, Math.floor(id / W)));
     cells.reverse();
-    cells[0] = { x: sx, z: sz };
+    cells.unshift(start);
+    cells.push(goal);
     const out: Pt[] = [];
     let i = 0;
     while (i < cells.length - 1) {
@@ -151,7 +161,7 @@ export class NavGrid {
       out.push(cells[j]);
       i = j;
     }
-    if (out.length && this.isFree(gx, gz)) out[out.length - 1] = { x: gx, z: gz };
+
     return out;
   }
 }

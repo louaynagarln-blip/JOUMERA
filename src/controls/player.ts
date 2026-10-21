@@ -168,7 +168,7 @@ export class Player {
       const wp = this.path[0];
       const dx = wp.x - this.x, dz = wp.z - this.z;
       const dist = Math.hypot(dx, dz);
-      if (dist < 0.35) {
+      if (dist < (this.path.length === 1 ? .18 : .08)) {
         this.path.shift();
         if (!this.path.length) { this.cancelPath(); this.onAutoWalkEnd('arrived'); }
       } else {
@@ -176,7 +176,7 @@ export class Player {
         const d = ((want - this.yaw + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
         this.yaw = approachAngle(this.yaw, want, dt, 3.2);
         this.pitch = approach(this.pitch, 0, dt, 2.4);
-        const sp = WALK * Math.max(0.25, 1 - Math.abs(d) / 1.35);
+        const sp = WALK * Math.max(0.25, 1 - Math.abs(d) / 1.35) * Math.min(1, dist / .65);
         tx = dx / dist * sp;
         tz = dz / dist * sp;
       }

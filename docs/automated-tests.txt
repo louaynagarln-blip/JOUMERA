@@ -2,7 +2,7 @@ JOUMERA development verification — 2026-10-21
 
 npm install: passed (existing npm http-proxy configuration warning).
 npm run lint: passed (tsc --noEmit).
-npm test: passed, 42 tests in 2 files.
+npm test: passed, 49 tests in 3 files.
 npm run build: passed (TypeScript and Vite 5.4.21).
 
 New display checks cover rotated off-centre models seated on their surface,
@@ -17,3 +17,10 @@ Existing tests cover movement, collisions, navigation, cart and live-catalogue
 isolation. These are automated logic tests; they do not establish visual
 quality, real-device Android performance or complete backend acceptance.
 WebGL visual review and physical Android testing remain outstanding.
+
+Navigation regression tests cover starts and goals within the planning margin,
+wall separation, invalid positions, thin glass and swept-circle corner clearance.
+A 20-step-per-second controller simulation reaches its goal around a wall
+without penetration or a stuck event. This is NOT an Android performance measurement.
+Auto-walk slows at waypoints, and unavailable routes cancel stale navigation
+and show an Arabic/English explanation.
