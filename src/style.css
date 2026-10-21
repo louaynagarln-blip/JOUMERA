@@ -22,10 +22,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 #banner b{display:block;font-family:Georgia,serif;letter-spacing:.25em;color:var(--champ)}
 #banner span{font-size:.8rem;color:var(--stone)}
 #interact{position:absolute;left:50%;bottom:calc(var(--safe-b) + 150px);transform:translateX(-50%);background:#0009;border:1px solid var(--champ);color:var(--warm);border-radius:999px;padding:.8rem 1.4rem;backdrop-filter:blur(8px)}
+#walk-stop{position:absolute;right:calc(var(--safe-r) + 18px);bottom:calc(var(--safe-b) + 28px);background:#271f19e8;border:1px solid var(--champ);color:var(--warm);border-radius:999px;padding:.7rem 1rem;backdrop-filter:blur(8px)}
 #joy{position:absolute;left:calc(var(--safe-l) + 22px);bottom:calc(var(--safe-b) + 22px);width:130px;height:130px;border-radius:50%;background:#17151255;border:1px solid #d9c7a755;backdrop-filter:blur(3px);touch-action:none}
 #knob{position:absolute;left:41px;top:41px;width:48px;height:48px;border-radius:50%;background:#eadfc9c9;border:1px solid #fff8;box-shadow:0 2px 10px #0006;will-change:transform}
 @media (pointer:fine){#joy{display:none}}
-@media (pointer:coarse) and (orientation:portrait){#joy{width:122px;height:122px;left:calc(var(--safe-l) + 16px);bottom:calc(var(--safe-b) + 16px)}#knob{left:37px;top:37px;width:46px;height:46px}#interact{bottom:calc(var(--safe-b) + 150px);padding:.75rem 1.2rem}.bar nav{gap:5px}.bar nav button{padding:.42rem .7rem}}
+@media (pointer:coarse) and (orientation:portrait){#joy{width:122px;height:122px;left:calc(var(--safe-l) + 16px);bottom:calc(var(--safe-b) + 16px)}#knob{left:37px;top:37px;width:46px;height:46px}#interact{bottom:calc(var(--safe-b) + 150px);padding:.75rem 1.2rem}#walk-stop{right:calc(var(--safe-r) + 16px);bottom:calc(var(--safe-b) + 22px)}.bar nav{gap:5px}.bar nav button{padding:.42rem .7rem}}
 #loading{position:fixed;inset:0;z-index:20;background:radial-gradient(circle at 50% 40%,#2a2520,var(--ink));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;text-align:center;padding:2rem}
 .logo{font-family:Georgia,serif;font-size:clamp(2rem,9vw,3.6rem);letter-spacing:.35em;color:var(--champ);padding-inline-start:.35em}
 .sub{letter-spacing:.6em;color:var(--stone);font-size:.8rem;margin-bottom:1.5rem}

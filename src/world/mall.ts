@@ -78,7 +78,6 @@ export async function buildMall(
   const colliders: Box[] = [];
   const pickables: Pickable[] = [];
   const extraDispose: Array<{ dispose(): void }> = [];
-  const animatedDisplays: THREE.MeshBasicMaterial[] = [];
   const aniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
 
   const furnishings = new Furnishings();
@@ -349,9 +348,7 @@ export async function buildMall(
       const [lx0, lx1] = rx(12, 13);
       box(lx0, lx1, 3.54, 3.6, st.zc + off - 2.5, st.zc + off + 2.5, M.light, false, false);
     }
-    const lamp = new THREE.PointLight(0xffe5c3, 17, 18, 2);
-    lamp.position.set(s * 14, 3.2, st.zc);
-    group.add(lamp);
+    // Emissive recessed strips supply a warm glow without five expensive point lights.
     for (const z of [st.zc - 4.65, st.zc + 4.65]) {
       const strip = box(...rx(9, 19.6), 3.48, 3.53, z - 0.025, z + 0.025, M.led, false, false);
       strip.castShadow = false;
@@ -364,7 +361,6 @@ export async function buildMall(
         const screenTexture = new THREE.CanvasTexture(screenCanvas());
         screenTexture.colorSpace = THREE.SRGBColorSpace; screenTexture.anisotropy = aniso; extraDispose.push(screenTexture);
         const screenMaterial = new THREE.MeshBasicMaterial({ map: screenTexture, toneMapped: false });
-        animatedDisplays.push(screenMaterial);
         const display = new THREE.Mesh(new THREE.PlaneGeometry(1.85, 1.18), screenMaterial);
         display.position.set(s * 18.52, 2.43, z); display.rotation.y = -s * Math.PI / 2; group.add(display);
         const glow = box(...rx(18.48, 18.5), 1.73, 1.78, z - 0.88, z + 0.88, M.led, false, false); glow.castShadow = false;
@@ -459,10 +455,7 @@ export async function buildMall(
   batchArchitecture(group);
   return {
     group, colliders, pickables, sun,
-    update(t: number) {
-
-      animatedDisplays.forEach((m, i) => { m.opacity = .94 + Math.sin(t * .7 + i) * .035; });
-    },
+    update(_t: number) {},
     dispose() {
       disposeObject(group);
       extraDispose.forEach((d) => d.dispose());

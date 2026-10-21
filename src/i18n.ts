@@ -16,7 +16,7 @@ const D: Record<Lang, Record<string, string>> = {
     orderOk: 'Order received. Reference:', needFields: 'Please fill in name, phone and address.', lowFps: 'Graphics lowered to keep movement smooth.',
     ctxLost: 'Graphics were interrupted. Reload to continue.', reload: 'Reload', fallbackTitle: 'Catalogue view',
     fallbackBody: 'The 3D mall could not start on this device. You can still browse and shop here.', stuck: 'Navigation stopped.',
-    liveFail: 'Live catalogue unavailable; showing demo mode.', soldOut: 'Out of stock',
+    liveFail: 'Live catalogue unavailable; showing demo mode.', soldOut: 'Out of stock', stopWalk: 'Stop walking',
   },
   ar: {
     loading: 'جارٍ تجهيز المول', enter: 'ادخل إلى جوميرا', stores: 'المتاجر', cart: 'السلة', settings: 'الإعدادات', close: 'إغلاق',
@@ -33,7 +33,7 @@ const D: Record<Lang, Record<string, string>> = {
     orderOk: 'تم استلام الطلب. المرجع:', needFields: 'يرجى إدخال الاسم والهاتف والعنوان.', lowFps: 'تم خفض الرسومات للحفاظ على سلاسة الحركة.',
     ctxLost: 'توقفت الرسومات. أعد التحميل للمتابعة.', reload: 'إعادة التحميل', fallbackTitle: 'عرض الكتالوج',
     fallbackBody: 'تعذّر تشغيل المول ثلاثي الأبعاد على هذا الجهاز. يمكنك التصفح والتسوق من هنا.', stuck: 'توقف التنقل.',
-    liveFail: 'تعذّر تحميل الكتالوج المباشر؛ يتم عرض الوضع التجريبي.', soldOut: 'نفدت الكمية',
+    liveFail: 'تعذّر تحميل الكتالوج المباشر؛ يتم عرض الوضع التجريبي.', soldOut: 'نفدت الكمية', stopWalk: 'إيقاف المشي',
   },
 };
 

@@ -13,7 +13,7 @@ import * as ui from './ui/ui';
 
 type Tier = 'low' | 'medium' | 'high';
 const TIERS: Tier[] = ['low', 'medium', 'high'];
-const PIXEL_CAP: Record<Tier, number> = { low: 1, medium: 1.25, high: 1.6 };
+const PIXEL_CAP: Record<Tier, number> = { low: 0.85, medium: 1.05, high: 1.3 };
 const SHADOW: Record<Tier, number> = { low: 0, medium: 0, high: 2048 };
 
 const settings: Settings = loadSettings();
@@ -33,7 +33,8 @@ async function boot(): Promise<void> {
   // Checkout is intentionally gated independently of catalogue availability.
   let renderer: THREE.WebGLRenderer;
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    const mobile = matchMedia('(pointer:coarse)').matches;
+    renderer = new THREE.WebGLRenderer({ antialias: !mobile, powerPreference: 'high-performance' });
   } catch (e) {
     ui.showFallback('WebGL unavailable');
     return;
@@ -50,7 +51,7 @@ async function boot(): Promise<void> {
   scene.fog = new THREE.Fog(0xdcd5c9, 30, 75);
   const pm = new THREE.PMREMGenerator(renderer);
   scene.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.45;
+  scene.environmentIntensity = 0.35;
   pm.dispose();
 
   let mall: Mall;
@@ -78,7 +79,7 @@ async function boot(): Promise<void> {
   applyPlayerSettings();
 
   // ----- quality -----
-  let tier: Tier = settings.quality === 'auto' ? (matchMedia('(pointer:coarse)').matches ? 'medium' : 'high') : settings.quality;
+  let tier: Tier = settings.quality === 'auto' ? (matchMedia('(pointer:coarse)').matches ? 'low' : 'high') : settings.quality;
   let pixelScale = 1;
   const applyQuality = () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, PIXEL_CAP[tier]) * pixelScale);
@@ -92,7 +93,7 @@ async function boot(): Promise<void> {
     resize();
   };
   const resize = () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
     player.resize(window.innerWidth, window.innerHeight);
   };
   window.addEventListener('resize', resize);
@@ -103,7 +104,7 @@ async function boot(): Promise<void> {
     saveSettings(s);
     applyPlayerSettings();
     if (s.quality !== 'auto' && s.quality !== tier) { tier = s.quality; pixelScale = 1; applyQuality(); }
-    if (s.quality === 'auto') { tier = matchMedia('(pointer:coarse)').matches ? 'medium' : 'high'; pixelScale = 1; applyQuality(); }
+    if (s.quality === 'auto') { tier = matchMedia('(pointer:coarse)').matches ? 'low' : 'high'; pixelScale = 1; applyQuality(); }
   };
   ui.hooks.onModal = (open) => {
     if (open) player.releaseLock();
@@ -122,18 +123,9 @@ async function boot(): Promise<void> {
     const path = nav.findPath(player.x, player.z, st.side * 11.5, st.zc);
     if (path && path.length) player.walkPath(path);
   };
+  ui.hooks.onStopWalk = () => { player.stop(); ui.setAutoWalk(false); };
   player.onAutoWalkEnd = (why) => { if (why === 'stuck') ui.toast(t('stuck')); };
   player.onInteract = ui.triggerInteract;
-  const floorRay = new THREE.Raycaster();
-  const floor = new THREE.Plane(new THREE.Vector3(0,1,0),0);
-  player.onTap = (x, y) => {
-    const rect = renderer.domElement.getBoundingClientRect();
-    floorRay.setFromCamera(new THREE.Vector2((x-rect.left)/rect.width*2-1, -(y-rect.top)/rect.height*2+1), player.camera);
-    const goal = floorRay.ray.intersectPlane(floor, new THREE.Vector3());
-    if (!goal || goal.distanceTo(player.camera.position) > 20 || !nav.isFree(goal.x,goal.z)) return;
-    const path = nav.findPath(player.x,player.z,goal.x,goal.z);
-    if (path?.length) player.walkPath(path);
-  };
 
   renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); cancelAnimationFrame(raf); ui.showContextLost(); });
 
@@ -164,9 +156,9 @@ async function boot(): Promise<void> {
     raf = requestAnimationFrame(frame);
     const dt = Math.max(0, (now - last) / 1000);
     last = now;
-    if (!entered) player.yaw = settings.reduced ? 0 : Math.sin(now / 4000) * 0.08; // honor reduced-motion before entry too
     player.update(dt);
     mall.update(now / 1000);
+    ui.setAutoWalk(player.autoWalking);
 
     if (player.enabled) {
       let best: Pickable | null = null, bestD = 3.2;

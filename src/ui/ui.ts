@@ -15,6 +15,7 @@ const priceOf = (slug: string): number | null => { const p = findProduct(slug); 
 export const hooks = {
   onModal: (_open: boolean) => {},
   onWalkTo: (_storeId: string) => {},
+  onStopWalk: () => {},
   onSettings: (_s: Settings) => {},
   onEnter: () => {},
   onTutorialStart: () => {},
@@ -76,6 +77,12 @@ export function setInteract(p: Product | null): void {
   if (!p) { b.classList.add('hidden'); return; }
   b.textContent = `${t('interact')} · ${pick(p.name)}`;
   b.classList.remove('hidden');
+}
+let walkStopVisible = false;
+export function setAutoWalk(active: boolean): void {
+  if (walkStopVisible === active) return;
+  walkStopVisible = active;
+  $('walk-stop').classList.toggle('hidden', !active);
 }
 export const triggerInteract = () => { if (interactTarget) openProduct(interactTarget); };
 
@@ -289,6 +296,7 @@ export function initUI(s: Settings): void {
   $('btn-cart').onclick = openCart;
   $('btn-settings').onclick = openSettings;
   $('interact').onclick = triggerInteract;
+  $('walk-stop').onclick = () => hooks.onStopWalk();
   $('tut-go').onclick = () => {
     if (($('tut-never') as HTMLInputElement).checked) { settings.tutorialDone = true; hooks.onSettings(settings); }
     hide('tutorial');

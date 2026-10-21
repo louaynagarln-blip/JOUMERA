@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolveCircle } from '../src/controls/collision';
 import { NavGrid } from '../src/controls/nav';
-import { approach, approachAngle, shapeStick } from '../src/controls/motion';
+import { approach, approachAngle, shapeStick, stickFromOrigin } from '../src/controls/motion';
 import { addLine, setQty, totalCents, MAX_QTY } from '../src/cart';
 import { searchProducts, searchStores } from '../src/data/search';
 
@@ -37,6 +37,16 @@ describe('movement response', () => {
     expect(shapeStick(0.04, -0.03)).toEqual({ x: 0, y: 0 });
     const diagonal = shapeStick(1, 1);
     expect(Math.hypot(diagonal.x, diagonal.y)).toBeCloseTo(1, 8);
+  });
+  it('does not move when a joystick is first touched away from its centre', () => {
+    const start = { x: 25, y: 140 };
+    expect(stickFromOrigin(start.x, start.y, start.x, start.y, 35)).toEqual({ x: 0, y: 0 });
+    expect(stickFromOrigin(25, 140, 25, 140, 35)).toEqual({ x: 0, y: 0 });
+  });
+  it('clamps a joystick drag relative to its touch origin', () => {
+    const delta = stickFromOrigin(100, 140, 25, 140, 35);
+    expect(delta.x).toBeCloseTo(35);
+    expect(delta.y).toBe(0);
   });
   it('eases toward walking speed without overshooting', () => {
     const v = approach(0, 1.25, 0.05, 4.8);
@@ -119,6 +129,22 @@ describe('walking acceptance', () => {
   it('discards tab suspension gaps instead of teleporting', () => {
     const p = new Player([]); p.enabled = true; p.walkPath([{x:0,z:-20}]); p.update(30);
     expect(9-p.z).toBeLessThan(.32);
+  });
+  it('discards long frame gaps so returning to the tab cannot continue a stale walk', () => {
+    const p = new Player([]); p.enabled = true; p.walkPath([{x:0,z:-20}]);
+    p.update(0.21);
+    expect(p.autoWalking).toBe(false);
+    expect(p.z).toBe(9);
+    p.update(.05);
+    expect(p.z).toBe(9);
+  });
+  it('clears auto-walk and motion whenever an overlay disables the controller', () => {
+    const p = new Player([]); p.enabled = true; p.walkPath([{x:0,z:-20}]);
+    p.update(.05); p.enabled = false;
+    const z = p.z;
+    p.update(.1); p.enabled = true; p.update(.1);
+    expect(p.autoWalking).toBe(false);
+    expect(p.z).toBe(z);
   });
 });
 

@@ -1,21 +1,25 @@
 import * as THREE from 'three';
 import { moveCircle, type Box } from './collision';
 import type { Pt } from './nav';
-import { approach, approachAngle, shapeStick } from './motion';
+import { approach, approachAngle, shapeStick, stickFromOrigin } from './motion';
 
 const EYE = 1.65;
 const RADIUS = 0.3;
 const WALK = 1.25;
 const RUN = 1.85;
-const JOY_R = 56;
 
 export class Player {
   readonly camera = new THREE.PerspectiveCamera(70, 1, 0.05, 120);
   x = 0; z = 9; yaw = 0; pitch = 0;
-  enabled = false;
+  private _enabled = false;
+  get enabled(): boolean { return this._enabled; }
+  set enabled(value: boolean) {
+    if (this._enabled === value) return;
+    this._enabled = value;
+    if (!value) this.resetMotion();
+  }
   sensitivity = 1; headBob = false; reducedMotion = false;
   onInteract: () => void = () => {};
-  onTap: (x: number, y: number) => void = () => {};
   onAutoWalkEnd: (reason: 'arrived' | 'stuck') => void = () => {};
 
   private vx = 0; private vz = 0;
@@ -30,6 +34,7 @@ export class Player {
   private lookId: number | null = null;
   private lastX = 0; private lastY = 0;
   private lookTravel = 0; private lookStarted = 0;
+  private joyOriginX = 0; private joyOriginY = 0; private joyRadius = 56;
 
   constructor(private readonly colliders: Box[]) {
     this.camera.rotation.order = 'YXZ';
@@ -39,18 +44,21 @@ export class Player {
   get autoWalking(): boolean { return this.path.length > 0; }
   walkPath(p: Pt[]): void { this.path = p.slice(); this.stuckT = 0; }
   cancelPath(): void { this.path = []; this.vx = 0; this.vz = 0; }
+  stop(): void { this.cancelPath(); this.joy = { x: 0, y: 0 }; this.keys.clear(); }
+  private resetMotion(): void {
+    this.keys.clear(); this.joy = { x: 0, y: 0 }; this.path = [];
+    this.vx = 0; this.vz = 0; this.pendY = 0; this.pendP = 0;
+    this.joyId = null; this.lookId = null; this.pitch = 0;
+  }
   resize(w: number, h: number): void { this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); }
 
   /** Wire touch + pointer + keyboard input. Pointer IDs are tracked so joystick and look never fight. */
   bind(lookEl: HTMLElement, joyEl: HTMLElement, knob: HTMLElement, lockTarget: HTMLElement): void {
     const joyMove = (e: PointerEvent) => {
-      const r = joyEl.getBoundingClientRect();
-      let dx = e.clientX - (r.left + r.width / 2);
-      let dy = e.clientY - (r.top + r.height / 2);
-      const len = Math.hypot(dx, dy);
-      if (len > JOY_R) { dx = (dx / len) * JOY_R; dy = (dy / len) * JOY_R; }
+      const r = stickFromOrigin(e.clientX, e.clientY, this.joyOriginX, this.joyOriginY, this.joyRadius);
+      const dx = r.x, dy = r.y;
       knob.style.transform = `translate(${dx}px, ${dy}px)`;
-      this.joy = shapeStick(dx / JOY_R, -dy / JOY_R, 0.1);
+      this.joy = shapeStick(dx / this.joyRadius, -dy / this.joyRadius, 0.14);
     };
     const joyEnd = (e: PointerEvent) => {
       if (e.pointerId !== this.joyId) return;
@@ -62,9 +70,13 @@ export class Player {
       if (!this.enabled || this.joyId !== null) return;
       e.preventDefault(); e.stopPropagation();
       this.joyId = e.pointerId;
+      const rect = joyEl.getBoundingClientRect();
+      this.joyOriginX = e.clientX; this.joyOriginY = e.clientY;
+      this.joyRadius = Math.max(26, Math.min(rect.width, rect.height) / 2 - 27);
       joyEl.setPointerCapture(e.pointerId);
       this.cancelPath(); // touching the joystick stops auto-walk instantly
-      joyMove(e);
+      this.joy = { x: 0, y: 0 };
+      knob.style.transform = 'translate(0,0)';
     });
     joyEl.addEventListener('pointermove', (e) => { if (e.pointerId === this.joyId) joyMove(e); });
     joyEl.addEventListener('pointerup', joyEnd);
@@ -81,14 +93,17 @@ export class Player {
     lookEl.addEventListener('pointermove', (e) => {
       if (e.pointerId !== this.lookId || !this.enabled) return;
       this.lookTravel += Math.hypot(e.clientX-this.lastX, e.clientY-this.lastY);
-      this.pendY += (e.clientX - this.lastX) * 0.0025 * this.sensitivity;
-      this.pendP += (e.clientY - this.lastY) * 0.0025 * this.sensitivity;
+      const dx = Math.max(-80, Math.min(80, e.clientX-this.lastX));
+      const dy = Math.max(-80, Math.min(80, e.clientY-this.lastY));
+      this.pendY += dx * 0.0018 * this.sensitivity;
+      this.pendP += dy * 0.0018 * this.sensitivity;
+      if (this.path.length && (dx !== 0 || dy !== 0)) this.cancelPath();
       this.lastX = e.clientX; this.lastY = e.clientY;
     });
     const lookEnd = (e: PointerEvent) => {
       if (e.pointerId !== this.lookId) return;
-      if (e.type === 'pointerup' && this.enabled && this.lookTravel < 8 && performance.now()-this.lookStarted < 300 && this.joyId === null) this.onTap(e.clientX,e.clientY);
       this.lookId = null;
+      this.pendY = 0; this.pendP = 0;
     };
     lookEl.addEventListener('pointerup', lookEnd);
     lookEl.addEventListener('pointercancel', lookEnd);
@@ -97,25 +112,23 @@ export class Player {
     document.addEventListener('pointerlockchange', () => { this.locked = document.pointerLockElement === lockTarget; });
     document.addEventListener('mousemove', (e) => {
       if (!this.locked || !this.enabled) return;
-      this.pendY += e.movementX * 0.0022 * this.sensitivity;
-      this.pendP += e.movementY * 0.0022 * this.sensitivity;
+      this.pendY += Math.max(-80, Math.min(80, e.movementX)) * 0.0018 * this.sensitivity;
+      this.pendP += Math.max(-80, Math.min(80, e.movementY)) * 0.0018 * this.sensitivity;
+      if (this.path.length) this.cancelPath();
     });
     const typing = (e: KeyboardEvent) => ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName);
     window.addEventListener('keydown', (e) => {
       if (typing(e)) return;
       const k = e.key.toLowerCase();
       if (k === 'e' || k === 'f') { if (this.enabled) this.onInteract(); return; }
-      this.keys.add(k);
+      if (this.enabled) this.keys.add(k);
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.key.toLowerCase()));
-    const resetInput = () => {
-      this.keys.clear(); this.joy = { x: 0, y: 0 }; this.path = [];
-      this.vx = 0; this.vz = 0; this.pendY = 0; this.pendP = 0;
-      this.joyId = null; this.lookId = null; knob.style.transform = 'translate(0,0)';
-    };
+    const resetInput = () => { this.resetMotion(); knob.style.transform = 'translate(0,0)'; };
     window.addEventListener('blur', resetInput);
     window.addEventListener('orientationchange', resetInput);
     document.addEventListener('visibilitychange', () => { if (document.hidden) resetInput(); });
+    document.addEventListener('pointerup', (e) => { if (e.pointerId === this.joyId) joyEnd(e); if (e.pointerId === this.lookId) lookEnd(e); });
   }
 
   releaseLock(): void { if (document.pointerLockElement) document.exitPointerLock(); }
@@ -123,7 +136,8 @@ export class Player {
   update(dt: number): void {
     // Integrate delayed frames in bounded steps; a background-tab gap is deliberately discarded.
     if (!Number.isFinite(dt) || dt <= 0) return;
-    let remaining = Math.min(dt, 0.25);
+    if (dt > 0.2) { this.resetMotion(); this.syncCamera(0); return; }
+    let remaining = dt;
     while (remaining > 1e-8) {
       const step = Math.min(remaining, 1 / 120);
       this.step(step);
