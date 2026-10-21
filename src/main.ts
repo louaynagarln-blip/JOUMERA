@@ -12,7 +12,7 @@ import * as ui from './ui/ui';
 
 type Tier = 'low' | 'medium' | 'high';
 const TIERS: Tier[] = ['low', 'medium', 'high'];
-const PIXEL_CAP: Record<Tier, number> = { low: 1, medium: 1.5, high: 2 };
+const PIXEL_CAP: Record<Tier, number> = { low: 1, medium: 1.25, high: 1.6 };
 const SHADOW: Record<Tier, number> = { low: 0, medium: 0, high: 2048 };
 
 const settings: Settings = loadSettings();

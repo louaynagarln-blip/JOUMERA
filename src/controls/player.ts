@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { resolveCircle, type Box } from './collision';
 import type { Pt } from './nav';
+import { approach, approachAngle, shapeStick } from './motion';
 
 const EYE = 1.65;
 const RADIUS = 0.3;
-const WALK = 1.4;
-const RUN = 2.1;
+const WALK = 1.25;
+const RUN = 1.85;
 const JOY_R = 56;
 
 export class Player {
@@ -47,9 +48,7 @@ export class Player {
       const len = Math.hypot(dx, dy);
       if (len > JOY_R) { dx = (dx / len) * JOY_R; dy = (dy / len) * JOY_R; }
       knob.style.transform = `translate(${dx}px, ${dy}px)`;
-      const nx = dx / JOY_R, ny = -dy / JOY_R;
-      const m = Math.hypot(nx, ny);
-      this.joy = m < 0.1 ? { x: 0, y: 0 } : { x: nx, y: ny };
+      this.joy = shapeStick(dx / JOY_R, -dy / JOY_R, 0.1);
     };
     const joyEnd = (e: PointerEvent) => {
       if (e.pointerId !== this.joyId) return;
@@ -78,8 +77,8 @@ export class Player {
     });
     lookEl.addEventListener('pointermove', (e) => {
       if (e.pointerId !== this.lookId || !this.enabled) return;
-      this.pendY += (e.clientX - this.lastX) * 0.0045 * this.sensitivity;
-      this.pendP += (e.clientY - this.lastY) * 0.0045 * this.sensitivity;
+      this.pendY += (e.clientX - this.lastX) * 0.0038 * this.sensitivity;
+      this.pendP += (e.clientY - this.lastY) * 0.0038 * this.sensitivity;
       this.lastX = e.clientX; this.lastY = e.clientY;
     });
     const lookEnd = (e: PointerEvent) => { if (e.pointerId === this.lookId) this.lookId = null; };
@@ -100,7 +99,10 @@ export class Player {
       this.keys.add(k);
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.key.toLowerCase()));
-    window.addEventListener('blur', () => { this.keys.clear(); this.joy = { x: 0, y: 0 }; });
+    window.addEventListener('blur', () => {
+      this.keys.clear(); this.joy = { x: 0, y: 0 }; this.path = [];
+      this.vx = 0; this.vz = 0; this.pendY = 0; this.pendP = 0;
+    });
   }
 
   releaseLock(): void { if (document.pointerLockElement) document.exitPointerLock(); }
@@ -109,7 +111,7 @@ export class Player {
     dt = Math.min(dt, 0.05);
     if (!this.enabled || dt <= 0) { this.syncCamera(0); return; }
 
-    const k = 1 - Math.exp(-(this.reducedMotion ? 40 : 22) * dt);
+    const k = 1 - Math.exp(-(this.reducedMotion ? 30 : 18) * dt);
     const ty = this.pendY * k, tp = this.pendP * k;
     this.yaw -= ty; this.pendY -= ty;
     this.pitch = Math.max(-1.2, Math.min(1.2, this.pitch - tp)); this.pendP -= tp;
@@ -135,9 +137,9 @@ export class Player {
       } else {
         const want = Math.atan2(-dx, -dz);
         const d = ((want - this.yaw + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
-        this.yaw += d * (1 - Math.exp(-4 * dt));
-        this.pitch += (0 - this.pitch) * (1 - Math.exp(-3 * dt));
-        const sp = WALK * Math.max(0.15, 1 - Math.abs(d) / 1.1);
+        this.yaw = approachAngle(this.yaw, want, dt, 3.2);
+        this.pitch = approach(this.pitch, 0, dt, 2.4);
+        const sp = WALK * Math.max(0.25, 1 - Math.abs(d) / 1.35);
         tx = -Math.sin(this.yaw) * sp;
         tz = -Math.cos(this.yaw) * sp;
       }
@@ -150,9 +152,9 @@ export class Player {
       tz = (rz * ix + fz * iy) * n * sp;
     }
 
-    const a = 1 - Math.exp(-(tx || tz ? 7 : 10) * dt); // gentle start, slightly quicker stop
-    this.vx += (tx - this.vx) * a;
-    this.vz += (tz - this.vz) * a;
+    const response = tx || tz ? 4.8 : 7.5;
+    this.vx = approach(this.vx, tx, dt, response);
+    this.vz = approach(this.vz, tz, dt, response);
 
     const nx = this.x + this.vx * dt, nz = this.z + this.vz * dt;
     const r = resolveCircle(nx, nz, RADIUS, this.colliders);
@@ -172,7 +174,7 @@ export class Player {
     let bob = 0;
     if (this.headBob && !this.reducedMotion && speed > 0.05) {
       this.bobT += dt * speed * 8;
-      bob = Math.sin(this.bobT) * 0.012 * Math.min(1, speed / WALK);
+      bob = Math.sin(this.bobT) * 0.009 * Math.min(1, speed / WALK);
     }
     this.camera.position.set(this.x, EYE + bob, this.z);
     this.camera.rotation.set(this.pitch, this.yaw, 0, 'YXZ');

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolveCircle } from '../src/controls/collision';
 import { NavGrid } from '../src/controls/nav';
+import { approach, approachAngle, shapeStick } from '../src/controls/motion';
 import { addLine, setQty, totalCents, MAX_QTY } from '../src/cart';
 
 const wall = { minX: -1, maxX: 1, minZ: -0.1, maxZ: 0.1 };
@@ -27,6 +28,25 @@ describe('NavGrid', () => {
   it('ends at the goal', () => {
     const p = nav.findPath(0, 5, 8, -5)!;
     expect(p[p.length - 1]).toEqual({ x: 8, z: -5 });
+  });
+});
+
+describe('movement response', () => {
+  it('keeps the joystick quiet at centre and shapes full diagonal travel', () => {
+    expect(shapeStick(0.04, -0.03)).toEqual({ x: 0, y: 0 });
+    const diagonal = shapeStick(1, 1);
+    expect(Math.hypot(diagonal.x, diagonal.y)).toBeCloseTo(1, 8);
+  });
+  it('eases toward walking speed without overshooting', () => {
+    const v = approach(0, 1.25, 0.05, 4.8);
+    expect(v).toBeGreaterThan(0);
+    expect(v).toBeLessThan(1.25);
+    expect(approach(v, 0, 0.05, 7.5)).toBeLessThan(v);
+  });
+  it('turns across the angle seam by the short direction', () => {
+    const result = approachAngle(Math.PI - 0.1, -Math.PI + 0.1, 1 / 60, 3.2);
+    expect(result).toBeGreaterThan(Math.PI - 0.1);
+    expect(result).toBeLessThan(Math.PI + 0.1);
   });
 });
 
