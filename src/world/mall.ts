@@ -496,17 +496,18 @@ export async function buildMall(
     const rr = rng(Math.floor(x * 13 + z * 7));
     const soil = new THREE.Mesh(new THREE.CylinderGeometry(.29 * sc, .29 * sc, .035 * sc, 32), darkMetal);
     soil.position.set(x, .55 * sc, z); group.add(soil);
+    const foliage = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 10, 8), M.leaf, 15);
+    const leafTransform = new THREE.Object3D();
     for (let i = 0; i < 15; i++) {
       const angle = rr() * Math.PI * 2;
       const reach = (.22 + rr() * .44) * sc;
-      const leaf = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), i % 3 ? M.leaf : M.leafLight);
-      leaf.scale.set(.13 * sc, (.42 + rr() * .35) * sc, .09 * sc);
-      leaf.position.set(x + Math.cos(angle) * reach * .55, (.78 + rr() * 1.25) * sc, z + Math.sin(angle) * reach * .55);
-      leaf.rotation.z = Math.cos(angle) * -.56;
-      leaf.rotation.x = Math.sin(angle) * .56;
-      leaf.castShadow = true;
-      group.add(leaf);
+      leafTransform.scale.set(.13 * sc, (.42 + rr() * .35) * sc, .09 * sc);
+      leafTransform.position.set(x + Math.cos(angle) * reach * .55, (.78 + rr() * 1.25) * sc, z + Math.sin(angle) * reach * .55);
+      leafTransform.rotation.set(Math.sin(angle) * .56, angle, Math.cos(angle) * -.56);
+      leafTransform.updateMatrix(); foliage.setMatrixAt(i, leafTransform.matrix);
+      foliage.setColorAt(i, new THREE.Color(i % 3 ? 0x304a3b : 0x526c52));
     }
+    foliage.castShadow = true; foliage.receiveShadow = false; group.add(foliage);
     colliders.push({ minX: x - 0.4 * sc, maxX: x + 0.4 * sc, minZ: z - 0.4 * sc, maxZ: z + 0.4 * sc });
   };
   for (const s of [-1, 1]) { plant(s * 7.2, 9, 1.3); plant(s * 7.2, -33, 1.3); }
