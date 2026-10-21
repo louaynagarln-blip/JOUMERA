@@ -4,7 +4,7 @@ This branch deploys a **development preview**. It is not ready to replace the li
 
 ## Implemented
 
-- Three.js mall shell with generated marble/wood/tile material maps, warm lighting, glass storefronts, a vaulted roof and store-specific fixture layouts.
+- Three.js mall shell with generated marble/wood/tile material maps, warm lighting, glass storefronts, a vaulted roof and store-specific fixture layouts. The arrival foyer now has a wide, clear sliding-door opening, illuminated portal signage, stone inlay and a lightweight ring chandelier; the reduced-motion option also removes the idle entrance sway.
 - Five walkable interiors: TECH STUDIO, HOME GALLERY, STYLE LAB, SMART LIVING and BEAUTY ATELIER.
 - First-person mobile movement with eased acceleration/turning, touch-ID-separated joystick and look controls, auto-walk cancellation, collision resolution and reduced-motion support.
 - Bilingual store/product search, product viewer, cart, DEMO price marking and catalog fallback when WebGL cannot start.

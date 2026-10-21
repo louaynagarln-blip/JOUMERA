@@ -257,11 +257,42 @@ export async function buildMall(
   const medallionCore = new THREE.Mesh(new THREE.CircleGeometry(1.42, 48), marbleMat(1, 1));
   medallionCore.rotation.x = -Math.PI / 2; medallionCore.position.set(0, 0.015, -12); group.add(medallionCore);
 
+  // Main arrival portal: broad glazed side panels, a clear sliding-door opening,
+  // illuminated stone jambs and a legible transom. The centre remains walkable.
   box(-20, -4, 0, 6, 12, 12.3, M.wall, true);
   box(4, 20, 0, 6, 12, 12.3, M.wall, true);
   box(-4, 4, 4.2, 6, 12, 12.3, M.wall);
-  box(-4, 4, 0, 4.2, 12.1, 12.15, M.glass, true, false);
+  box(-4, -2.72, 0.08, 4.16, 12.1, 12.18, M.glass, true, false);
+  box(2.72, 4, 0.08, 4.16, 12.1, 12.18, M.glass, true, false);
+  for (const x of [-2.74, 2.74]) {
+    box(x - 0.11, x + 0.11, 0, 4.25, 11.96, 12.34, M.gold, false, false);
+    box(x - 0.19, x + 0.19, 0, 0.22, 11.9, 12.38, M.stone, false, false);
+  }
+  // Glass leaves shown retracted into the side pockets; 2.6 m of clear passage remains.
+  for (const [x0, x1] of [[-2.5, -1.3], [1.3, 2.5]]) {
+    box(x0, x1, 0.1, 3.55, 12.08, 12.13, M.glass, false, false);
+    box(x0, x0 + 0.045, 0.12, 3.52, 12.04, 12.17, M.frame, false, false);
+    box(x1 - 0.045, x1, 0.12, 3.52, 12.04, 12.17, M.frame, false, false);
+    box((x0 + x1) / 2 - 0.035, (x0 + x1) / 2 + 0.035, 1.2, 2.3, 12.0, 12.08, brassMat, false, false);
+  }
+  box(-2.82, 2.82, 3.65, 3.76, 11.94, 12.36, darkMetal, false, false);
+  box(-2.82, 2.82, 3.77, 3.83, 11.94, 12.36, M.led, false, false);
   box(-4, 4, 4.1, 4.2, 12.0, 12.35, M.gold, false, false);
+  // Warm stone foyer inlay marks the transition from the entrance into the atrium.
+  plane(-3.55, 3.55, 8.75, 11.72, 0.009, storeFloorMat(0x51463b));
+  for (const x of [-3.5, 3.5]) box(x - 0.022, x + 0.022, 0.018, 0.025, 8.78, 11.7, brassMat, false, false);
+  for (const z of [8.8, 11.68]) box(-3.5, 3.5, 0.018, 0.025, z - 0.022, z + 0.022, brassMat, false, false);
+  const portalBrand = label('JOUMERA', 3.8, 0.58, '#e7d2ad', null, 13);
+  portalBrand.position.set(0, 4.86, 11.83); portalBrand.rotation.y = Math.PI;
+  const portalSub = label('THE ART OF EVERYDAY LIVING', 3.8, 0.25, '#d1c2a7', null, 3);
+  portalSub.position.set(0, 4.47, 11.83); portalSub.rotation.y = Math.PI;
+  // A restrained two-ring chandelier gives the foyer a human-scale focal point.
+  for (const [radius, tube, y] of [[1.65, 0.055, 5.35], [1.12, 0.035, 5.7]]) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, tube, 8, 56), brassMat);
+    ring.position.set(0, y, 8.3); group.add(ring);
+  }
+  const entryGlow = new THREE.PointLight(0xffdfb2, 30, 13, 2);
+  entryGlow.position.set(0, 5.1, 8.3); group.add(entryGlow);
   box(-20, 20, 0, 6, -36.3, -36, M.wall, true);
   box(-20.3, -20, 0, 6, -36.3, 12.3, M.wall, true);
   box(20, 20.3, 0, 6, -36.3, 12.3, M.wall, true);

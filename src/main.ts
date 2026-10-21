@@ -163,7 +163,7 @@ async function boot(): Promise<void> {
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    if (!entered) player.yaw = Math.sin(now / 4000) * 0.08; // gentle idle sway on the entrance view
+    if (!entered) player.yaw = settings.reduced ? 0 : Math.sin(now / 4000) * 0.08; // honor reduced-motion before entry too
     player.update(dt);
     mall.update(now / 1000);
 
