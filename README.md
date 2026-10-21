@@ -1,38 +1,37 @@
 # JOUMERA V-MALL
 
-Walkable first-person 3D mall (Three.js + Vite + TypeScript) with a multi-vendor Supabase backend design.
-Read **STATUS.md** first: it lists exactly what is and is not done.
+Walkable first-person 3D mall built with Three.js, Vite, TypeScript and Supabase.
+Read [STATUS.md](STATUS.md) before using it: this is a review preview, not a live multi-vendor store.
 
 ## Run locally
+
 ```bash
 npm install
-cp .env.example .env      # leave empty for demo mode
-npm run lint && npm test
+cp .env.example .env
+npm run lint
+npm test
 npm run dev
 ```
-Demo mode (no env vars): everything works except checkout, which is disabled. Prices shown are flagged DEMO.
 
-## Supabase (optional, use a DEV project)
-1. Create a new Supabase project (not the production one).
-2. Run `supabase/migrations/001_schema.sql` in the SQL editor.
-3. Sign up once, then promote yourself: `update public.profiles set role='super_admin' where id='<your auth user id>';`
-4. Create stores and products (slug must match `src/data/catalog.ts`, e.g. `demo-laptop-14`), set `retail_price` and
-   `status='approved'` as super admin.
-5. Put `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env`. Checkout then calls `place_order`, which prices the
-   order on the server (cash on delivery).
+Without Vite Supabase environment variables, the app uses the visible demo catalog and keeps checkout disabled. Demo products and prices are not real offers.
 
-## Deploy safely (existing production site)
-```bash
-git checkout -b feature/v-mall      # never commit to the production branch
-git add . && git commit -m "Add V-MALL" && git push -u origin feature/v-mall
-```
-In Vercel, import this as a NEW project (or use the branch preview of a separate repo). Add the two env vars to the
-Preview environment only. Do not change the production domain or production branch until the preview is approved.
+## Supabase isolation
+
+The existing HOCO database has its own production storefront tables. V-Mall uses a separate `v_mall` schema and the `vmall_catalog` / `vmall_place_order` RPC names; do not connect it to HOCO's `catalog`, `products`, `orders` or `place_order` interfaces.
+
+`supabase/migrations/001_schema.sql` is a deprecated, colliding draft and intentionally contains no executable schema. The timestamped `vmall_isolation` migration creates the isolated tables. It has been applied to the HOCO database without importing products or changing HOCO records. The catalog is empty, checkout is disabled in `v_mall.settings`, and the order RPC is not executable by public API roles.
+
+Do not enable checkout until vendors, stock, verified retail prices, delivery fees, order operations, abuse controls and admin/vendor management have been implemented and tested.
+
+## Safe deployment
+
+Use a Vercel Preview deployment on a development branch. The Supabase URL and publishable key, if configured, belong in Preview only. Do not promote this app to `main` or Production while `STATUS.md` lists release blockers.
 
 ## Project layout
-- `src/world` mall geometry + product stand-ins; `src/controls` walker, collision, A* navigation
-- `src/ui` HUD, cart, settings, product viewer; `src/data/catalog.ts` stores + demo products
-- `src/api/backend.ts` Supabase access; `supabase/migrations` schema + RLS; `public/assets/manifest.json` asset needs
 
-## Adding real products
-Put a Meshopt-compressed GLB in `public/assets/models/`, set `glb: '/assets/models/name.glb'` on the product.
+- `src/world`: mall geometry and procedural material maps
+- `src/controls`: walking, collision and pathfinding
+- `src/ui`: HUD, cart, settings and product viewer
+- `src/data`: demo catalog and bilingual search
+- `src/api/backend.ts`: V-Mall-only catalog and order RPC adapter
+- `supabase/migrations`: isolated V-Mall schema migration
