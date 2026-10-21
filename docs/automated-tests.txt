@@ -1,40 +1,23 @@
-npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+npm install
+# up to date
 
-> joumera-v-mall@0.1.0 lint
-> tsc --noEmit
+npm run lint
+# tsc --noEmit: passed
 
-npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+npm test
+# Vitest: 1 file, 32 tests passed
 
-> joumera-v-mall@0.1.0 test
-> vitest run
+npm run build
+# tsc --noEmit && vite build: passed (Vite 5.4.21)
+# output: mall JS 131.37 kB (44.31 kB gzip), Three.js chunk 554.20 kB (141.85 kB gzip)
 
+Additional regression cases:
+- touch-down on the joystick is neutral regardless of where on its pad it starts
+- joystick travel is clamped relative to the touch origin
+- stale auto-walk is discarded after a long suspended frame
+- disabling the controller clears active movement before an overlay opens
+- storefront arch leaves a wide entry opening
 
- RUN  v2.1.9 /workspace/scratch/45560e9bf2c5/work/JOUMERA-V-MALL
-
- ✓ tests/logic.test.ts (27 tests) 34ms
-
- Test Files  1 passed (1)
-      Tests  27 passed (27)
-   Start at  10:54:10
-   Duration  410ms (transform 116ms, setup 0ms, collect 165ms, tests 34ms, environment 0ms, prepare 57ms)
-
-npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
-
-> joumera-v-mall@0.1.0 build
-> tsc --noEmit && vite build
-
-vite v5.4.21 building for production...
-transforming...
-✓ 75 modules transformed.
-rendering chunks...
-computing gzip size...
-dist/index.html                                   2.43 kB │ gzip:   0.90 kB
-dist/admin-vmall.html                             4.35 kB │ gzip:   1.47 kB
-dist/assets/admin-XkmGP8zB.css                    4.58 kB │ gzip:   1.70 kB
-dist/assets/mall-Di2wT7zP.css                     7.22 kB │ gzip:   2.22 kB
-dist/assets/modulepreload-polyfill-B5Qt9EMX.js    0.71 kB │ gzip:   0.40 kB
-dist/assets/admin-DPPReac_.js                    11.82 kB │ gzip:   4.22 kB
-dist/assets/mall-BbmW-O_j.js                    129.93 kB │ gzip:  43.97 kB
-dist/assets/supabase-C5Jl8WKK.js                223.76 kB │ gzip:  58.63 kB
-dist/assets/three-DVJPBPIF.js                   555.45 kB │ gzip: 142.29 kB
-✓ built in 1.80s
+Deployment smoke checks:
+- Vercel Preview deployment READY; HTML, application bundle, marble texture, and three GLB models returned HTTP 200
+- This verifies delivery of files only. WebGL rendering, touch behavior, and Android FPS were not measured in a physical-device/browser test environment.
