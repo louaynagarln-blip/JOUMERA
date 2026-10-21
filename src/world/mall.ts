@@ -3,6 +3,7 @@ import {boutiquePortal, retailCounter} from './retailFixtures';
 import type { Box } from '../controls/collision';
 import { STORES, type Product, type StoreDef } from '../data/catalog';
 import { Furnishings, disposeObject, batchArchitecture, ASSETS, type AssetName } from './assets';
+import { makeProductMesh } from './productMesh';
 
 export const BOUNDS = { minX: -20, maxX: 20, minZ: -36, maxZ: 12 };
 export interface Pickable { product: Product; obj: THREE.Object3D; pos: THREE.Vector3 }
@@ -447,16 +448,23 @@ export async function buildMall(
       const home = st.id === 'home-gallery';
       const z = home && i === 0 ? st.zc : st.zc - 2.7 + i * 1.8;
       const x = home && i !== 0 ? s * 18.3 : s * 14;
+      // Keep each display item physically seated on its fixture: the HOME centre table
+      // is 46 cm high, its wall cabinets are 1.05 m high, and retail counters are 84 cm.
+      const displayY = home ? (i === 0 ? .46 : 1.07) : .84;
       let obj: THREE.Object3D;
       const assetName = p.glb?.split('/').pop()?.replace('.glb', '') as AssetName;
       if (p.image && hocoProductTextures.has(p)) {
         const photoMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.05), new THREE.MeshBasicMaterial({ map: hocoProductTextures.get(p)!, toneMapped: false, side: THREE.DoubleSide }));
         photoMesh.position.set(x, 1.25, z); photoMesh.rotation.y = -s * Math.PI / 2; group.add(photoMesh); obj = photoMesh;
       } else if (ASSETS.includes(assetName)) {
-        obj = furnishings.place(assetName, group, x, home ? .46 : .84, z, assetName === 'classic_laptop' ? .32 : .55);
+        obj = furnishings.place(assetName, group, x, displayY, z, assetName === 'classic_laptop' ? .32 : .55);
       } else {
-        obj = label(`${p.name.en}${p.demo ? ' · DEMO' : ''}`, 1.25, .48, '#e8d5b4', '#19262b', 2);
-        obj.position.set(x, 1.1, z); obj.rotation.y = -s * Math.PI / 2;
+        // Use the item's actual silhouette on the fixture instead of a floating text
+        // card standing in for a product. These remain explicitly labelled demo items
+        // in the catalogue until real vendor models and inventory are supplied.
+        obj = makeProductMesh(p);
+        obj.position.set(x, displayY, z);
+        group.add(obj);
       }
       pickables.push({ product: p, obj, pos: new THREE.Vector3(x, 1.1, z) });
     });
