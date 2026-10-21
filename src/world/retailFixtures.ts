@@ -1,6 +1,24 @@
 import * as THREE from 'three';
 import type { Box } from '../controls/collision';
 
+/** An open, anodized entry portal with a high arch for a distinct boutique threshold. */
+export function boutiquePortal(group: THREE.Group, x: number, z: number, accent: number, side: -1 | 1): void {
+ const outer = new THREE.Shape();
+ outer.moveTo(-1.72, 0); outer.lineTo(1.72, 0); outer.lineTo(1.72, 1.48);
+ outer.absarc(0, 1.48, 1.72, 0, Math.PI, false); outer.closePath();
+ const opening = new THREE.Path();
+ opening.moveTo(-1.49, 0); opening.lineTo(-1.49, 1.48);
+ opening.absarc(0, 1.48, 1.49, Math.PI, 0, true); opening.lineTo(1.49, 0); opening.closePath();
+ outer.holes.push(opening);
+ const geometry = new THREE.ExtrudeGeometry(outer, { depth: .14, bevelEnabled: true, bevelSegments: 2, bevelSize: .018, bevelThickness: .018, curveSegments: 20 });
+ const material = new THREE.MeshStandardMaterial({ color: accent, metalness: .48, roughness: .28, emissive: accent, emissiveIntensity: .035 });
+ const portal = new THREE.Mesh(geometry, material);
+ portal.rotation.y = side * Math.PI / 2;
+ portal.position.set(x, .015, z);
+ portal.castShadow = true; portal.receiveShadow = true;
+ group.add(portal);
+}
+
 /** A joinery component with a rounded plan, recessed plinth, bevelled top and bronze reveal. */
 export function retailCounter(group:THREE.Group,colliders:Box[],x:number,z:number,width:number,length:number,height:number,body:THREE.Material,top:THREE.Material,metal:THREE.Material):void{
  const radius=Math.min(.18,width/4,length/4);

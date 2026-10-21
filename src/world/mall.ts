@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {retailCounter} from './retailFixtures';
+import {boutiquePortal, retailCounter} from './retailFixtures';
 import type { Box } from '../controls/collision';
 import { STORES, type Product, type StoreDef } from '../data/catalog';
 import { Furnishings, disposeObject, batchArchitecture, ASSETS, type AssetName } from './assets';
@@ -325,6 +325,8 @@ export async function buildMall(
     const rx = (a: number, b: number): [number, number] => [Math.min(s * a, s * b), Math.max(s * a, s * b)];
     const [fx0, fx1] = rx(8.25, 20);
     const zn = st.zc + 5, zf = st.zc - 5;
+    // Each shop gets its own coloured arched entry frame; the clear opening remains 2.98 m.
+    boutiquePortal(group, s * 8.25, st.zc, st.accent, s);
     box(fx0, fx1, 0, 6, zn, zn + 0.2, M.wall, true);
     box(fx0, fx1, 0, 6, zf - 0.2, zf, M.wall, true);
     plane(fx0, fx1, zf, zn, 0.006, storeFloorMat(st.floor));

@@ -191,8 +191,17 @@ describe('management operations',()=>{
 });
 
 import * as THREE from 'three';
-import {retailCounter} from '../src/world/retailFixtures';
+import {boutiquePortal,retailCounter} from '../src/world/retailFixtures';
 describe('retail furnishing clearance',()=>{
+ it('frames a wide, unobstructed store entrance with an arched display portal',()=>{
+  const group=new THREE.Group();boutiquePortal(group,8.25,-4,0x345678,1);
+  const bounds=new THREE.Box3().setFromObject(group);
+  expect(bounds.max.x-bounds.min.x).toBeLessThan(.2);
+  expect(bounds.max.y).toBeGreaterThan(3.1);
+  expect(bounds.max.y).toBeLessThan(3.4);
+  expect(bounds.max.z-bounds.min.z).toBeGreaterThan(3.3);
+  expect(group.children[0].position.x).toBe(8.25);
+ });
  it('keeps the bevelled joinery inside its collision envelope',()=>{
   const group=new THREE.Group();const boxes:Array<{minX:number;maxX:number;minZ:number;maxZ:number}>=[];
   const mat=new THREE.MeshStandardMaterial();retailCounter(group,boxes,14,-2,1.7,2.8,.84,mat,mat,mat);
