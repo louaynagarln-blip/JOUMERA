@@ -22,6 +22,7 @@ export const hooks = {
 
 let settings: Settings;
 let checkoutReady = false;
+let fallbackReason: string | null = null;
 let viewer: ProductViewer | null = null;
 let interactTarget: Product | null = null;
 const openOverlays = new Set<string>();
@@ -251,6 +252,7 @@ export function openSettings(): void {
 }
 
 export function showFallback(reason: string): void {
+  fallbackReason = reason;
   hideLoading();
   $('hud').classList.add('hidden');
   const f = $('fallback');
@@ -294,7 +296,7 @@ export function initUI(s: Settings): void {
   };
   wireDrawer();
   cart.subscribe(renderCart);
-  onLang(() => { renderCart(); });
+  onLang(() => { renderCart(); if (fallbackReason !== null) showFallback(fallbackReason); });
   renderCart();
   void ALL_PRODUCTS;
 }
