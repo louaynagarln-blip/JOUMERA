@@ -16,6 +16,7 @@ Rendering and device verification:
 - Touch auto quality pixel caps: low 1.35, medium 1.8, high 2.25; automatic mode starts at medium for touch devices.
 - The environment available to this run cannot render WebGL screenshots and no physical Android GPU/FPS test was performed.
 - Therefore the 3D visual result and frame rate on the user's device remain unverified.
+- The WebGL fallback catalogue now displays the three real HOCO photos and clearly marks unverified price/stock.
 
 HOCO product data:
 - Three owner-supplied HOCO product photos are integrated under public/assets/hoco/.

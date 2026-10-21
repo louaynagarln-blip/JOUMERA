@@ -94,7 +94,7 @@ function renderSearchResults(query: string): string {
   const products = searchProducts(query);
   const stores = searchStores(query);
   if (!query.trim()) return `<p class="search-hint">${t('searchHint')}</p>`;
-  const productRows = products.map(({ product, store }) => `<button class="menu-item" data-search-product="${esc(product.slug)}"><span><b>${esc(pick(product.name))}</b><small>${esc(store.name)} · ${product.demo ? t('demoPrice') : product.priceUSD == null ? t('priceUnavailable') : money(Math.round(product.priceUSD * 100))}</small></span><span>›</span></button>`).join('');
+  const productRows = products.map(({ product, store }) => `<button class="menu-item" data-search-product="${esc(product.slug)}"><span><b>${esc(pick(product.name))}</b><small>${esc(store.name)} · ${product.demo ? t('demoPrice') : product.priceUSD == null && !product.available ? t('unverifiedListing') : product.priceUSD == null ? t('priceUnavailable') : money(Math.round(product.priceUSD * 100))}</small></span><span>›</span></button>`).join('');
   const storeRows = stores.map((store) => `<button class="menu-item" data-search-store="${esc(store.id)}"><span><b>${esc(store.name)}</b><small>${esc(pick(store.tagline))}</small></span><span>${t('walkTo')} ›</span></button>`).join('');
   return `${products.length ? `<h3>${t('searchProducts')}</h3>${productRows}` : ''}${stores.length ? `<h3>${t('searchStores')}</h3>${storeRows}` : ''}${products.length || stores.length ? '' : `<p>${t('noResults')}</p>`}`;
 }
@@ -269,7 +269,7 @@ export function showFallback(reason: string): void {
   f.innerHTML = `<div class="logo" style="font-size:1.6rem;text-align:center">JOUMERA</div>
     <h2 style="font-family:Georgia,serif;font-weight:500">${t('fallbackTitle')}</h2><p>${t('fallbackBody')}</p><p><small>${esc(reason)}</small></p>
     <p><button class="ghost" id="fb-search">${t('search')}</button> <button class="ghost" id="fb-cart">${t('cart')}</button> <button class="ghost" id="fb-set">${t('settings')}</button></p>
-    ${STORES.map((s) => `<h3 style="font-family:Georgia,serif;letter-spacing:.15em;color:var(--champ)">${esc(s.name)}</h3><div class="grid">${s.products.map((p) => `<div class="pcard"><b>${esc(pick(p.name))}</b><br><small>${p.demo ? t('demoPrice') : p.priceUSD != null && p.available ? money(Math.round(p.priceUSD * 100)) : t('priceUnavailable')}</small><br><button class="ghost" data-p="${p.slug}" style="margin-top:.5rem">${t('interact')}</button></div>`).join('')}</div>`).join('')}`;
+    ${STORES.map((s) => `<h3 style="font-family:Georgia,serif;letter-spacing:.15em;color:var(--champ)">${esc(s.name)}</h3><div class="grid">${s.products.map((p) => `<div class="pcard">${p.image ? `<img class="pcard-image" src="${esc(p.image)}" alt="${esc(pick(p.name))}" loading="lazy">` : ''}<b>${esc(pick(p.name))}</b><br><small>${p.demo ? t('demoPrice') : p.priceUSD != null && p.available ? money(Math.round(p.priceUSD * 100)) : !p.available ? t('unverifiedListing') : t('priceUnavailable')}</small><br><button class="ghost" data-p="${esc(p.slug)}" style="margin-top:.5rem">${t('interact')}</button></div>`).join('')}</div>`).join('')}`;
   f.onclick = (e) => {
     const tg = e.target as HTMLElement;
     if (tg.id === 'fb-search') openSearch();
