@@ -48,7 +48,7 @@ export class Player {
   private resetMotion(): void {
     this.keys.clear(); this.joy = { x: 0, y: 0 }; this.path = [];
     this.vx = 0; this.vz = 0; this.pendY = 0; this.pendP = 0;
-    this.joyId = null; this.lookId = null; this.pitch = 0;
+    this.joyId = null; this.lookId = null;
   }
   resize(w: number, h: number): void { this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); }
 
@@ -109,7 +109,10 @@ export class Player {
     lookEl.addEventListener('pointercancel', lookEnd);
     lookEl.addEventListener('lostpointercapture', lookEnd);
 
-    document.addEventListener('pointerlockchange', () => { this.locked = document.pointerLockElement === lockTarget; });
+    document.addEventListener('pointerlockchange', () => {
+      this.locked = document.pointerLockElement === lockTarget;
+      if (!this.locked) resetInput();
+    });
     document.addEventListener('mousemove', (e) => {
       if (!this.locked || !this.enabled) return;
       this.pendY += Math.max(-80, Math.min(80, e.movementX)) * 0.0018 * this.sensitivity;

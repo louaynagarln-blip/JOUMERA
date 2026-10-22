@@ -4,6 +4,7 @@ import type { Box } from '../controls/collision';
 import { STORES, type Product, type StoreDef } from '../data/catalog';
 import { Furnishings, disposeObject, batchArchitecture, ASSETS, type AssetName } from './assets';
 import { makeProductMesh } from './productMesh';
+import { frontFaceX } from './signPlacement';
 import { photoSize, productDisplaySlot, seatDisplayObject } from './displayLayout';
 
 export const BOUNDS = { minX: -20, maxX: 20, minZ: -36, maxZ: 12 };
@@ -306,7 +307,7 @@ export async function buildMall(
       const signBacking = box(sx0 - 0.045, sx1 + 0.045, 4.32, 5.44, st.zc - 3.28, st.zc + 3.28, std(st.accent, 0.38, 0.28), false, false);
       signBacking.castShadow = false;
       const sign = label(st.name, 6.4, 1.12, '#f4d9a7', null, 10);
-      sign.position.set(s * 8.01, 4.88, st.zc);
+      sign.position.set(frontFaceX(sx0 - 0.045, sx1 + 0.045, s), 4.88, st.zc);
       sign.rotation.y = -s * Math.PI / 2;
       cursor = zf;
     }
@@ -356,10 +357,11 @@ export async function buildMall(
     // A fluted feature wall, bronze rails and halo-lit brand panel give each boutique a distinct back wall.
     const [fl0, fl1] = rx(19.82, 19.88);
     for (let z = zf + 0.35; z < zn; z += 0.34) box(fl0, fl1, 0.18, 3.45, z, z + 0.035, brassMat, false, false);
-    const signBase = box(bx0 - 0.025, bx1 + 0.02, 2.45, 3.52, st.zc - 3.1, st.zc + 3.1, std(st.accent, 0.48, 0.18), false, false);
+    const [signX0, signX1] = rx(19.68, 19.8);
+    const signBase = box(signX0, signX1, 2.45, 3.52, st.zc - 3.1, st.zc + 3.1, std(st.accent, 0.48, 0.18), false, false);
     signBase.castShadow = false;
     const sign = label(st.name, 5.5, 0.88, '#f4d9a7', null, 14);
-    sign.position.set(s * 19.93, 2.9, st.zc);
+    sign.position.set(frontFaceX(signX0, signX1, s), 2.9, st.zc);
     sign.rotation.y = -s * Math.PI / 2;
     for (const off of [-2, 2]) {
       const [lx0, lx1] = rx(12, 13);
