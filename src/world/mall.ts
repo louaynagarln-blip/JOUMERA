@@ -4,6 +4,7 @@ import type { Box } from '../controls/collision';
 import { STORES, type Product, type StoreDef } from '../data/catalog';
 import { Furnishings, disposeObject, batchArchitecture, ASSETS, type AssetName } from './assets';
 import { makeProductMesh } from './productMesh';
+import { productCard } from './productCard';
 import { frontFaceX } from './signPlacement';
 import { photoSize, productDisplaySlot, seatDisplayObject } from './displayLayout';
 
@@ -430,8 +431,10 @@ export async function buildMall(
         const photo = new THREE.Mesh(new THREE.PlaneGeometry(...photoSize(texture.image.width, texture.image.height, 1.9, 1.55)), new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide }));
         photo.position.set(s * 19.23, 2.0, z); photo.rotation.y = -s * Math.PI / 2; group.add(photo);
         box(...rx(18.25, 19.18), 0.78, 0.86, z - 1.25, z + 1.25, woodMat, false, false).castShadow = true;
-        const nameplate = label('PRICE NOT VERIFIED', 2.2, 0.28, '#f2d7a3', null, 3);
-        nameplate.position.set(s * 19.18, 1.05, z); nameplate.rotation.y = -s * Math.PI / 2;
+        const nameplate = productCard(product, 2.1, aniso);
+        nameplate.position.set(s * 19.18, 1.16, z); nameplate.rotation.y = -s * Math.PI / 2;
+        group.add(nameplate);
+        pickables.push({ product, obj: nameplate, pos: nameplate.position.clone() });
         pickables.push({ product, obj: photo, pos: new THREE.Vector3(s * 18.85, 1.8, z) });
       });
       // A dark anodized service island with a real brass reveal anchors the centre without closing the aisle.
@@ -505,6 +508,14 @@ export async function buildMall(
         group.add(obj);
       }
       seatDisplayObject(obj, slot);
+      // A low, tilted bilingual shelf card identifies each sample at walking distance.
+      // It faces the entrance and stays within the existing counter footprint.
+      const card = productCard(p, .30, aniso);
+      const frontOffset = st.id === 'home-gallery' && i > 0 ? .18 : .29;
+      card.position.set(x - s * frontOffset, displayY + .095, z);
+      card.rotation.set(-.38, -s * Math.PI / 2, 0, 'YXZ');
+      group.add(card);
+      pickables.push({ product: p, obj: card, pos: card.position.clone() });
       pickables.push({ product: p, obj, pos: new THREE.Vector3(x, displayY + .2, z) });
     });
   };

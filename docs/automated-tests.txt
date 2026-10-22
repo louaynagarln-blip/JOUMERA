@@ -41,3 +41,8 @@ stop/restart, modal cancellation, independent fingers, document cancellation,
 orientation and suspended frames. Stop now releases captured pointers so stale
 move events cannot restart walking. Reset also recentres the visible joystick.
 Physical Android touch and performance remain unverified.
+
+Bilingual in-scene product cards added to existing counter displays and HOCO
+wall vitrines. Cards open the associated product and clearly mark demo/display
+status without showing unverified prices. No new product GLBs were added.
+Automated checks passed; typography and placement await rendered visual QA.
