@@ -30,6 +30,7 @@ export class Player {
   private bobT = 0;
   private stuckT = 0;
   private locked = false;
+  private releasePointers: () => void = () => {};
   private joyId: number | null = null;
   private lookId: number | null = null;
   private lastX = 0; private lastY = 0;
@@ -44,16 +45,25 @@ export class Player {
   get autoWalking(): boolean { return this.path.length > 0; }
   walkPath(p: Pt[]): void { this.path = p.slice(); this.stuckT = 0; }
   cancelPath(): void { this.path = []; this.vx = 0; this.vz = 0; }
-  stop(): void { this.cancelPath(); this.joy = { x: 0, y: 0 }; this.keys.clear(); }
+  stop(): void { this.resetMotion(); }
   private resetMotion(): void {
     this.keys.clear(); this.joy = { x: 0, y: 0 }; this.path = [];
     this.vx = 0; this.vz = 0; this.pendY = 0; this.pendP = 0;
+    this.releasePointers();
     this.joyId = null; this.lookId = null;
   }
   resize(w: number, h: number): void { this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); }
 
   /** Wire touch + pointer + keyboard input. Pointer IDs are tracked so joystick and look never fight. */
   bind(lookEl: HTMLElement, joyEl: HTMLElement, knob: HTMLElement, lockTarget: HTMLElement): void {
+    this.releasePointers = () => {
+      const captures: Array<[HTMLElement, number | null]> = [[joyEl, this.joyId], [lookEl, this.lookId]];
+      this.joyId = null; this.lookId = null;
+      knob.style.transform = 'translate(0,0)';
+      for (const [element, id] of captures) {
+        if (id !== null && element.hasPointerCapture(id)) element.releasePointerCapture(id);
+      }
+    };
     const joyMove = (e: PointerEvent) => {
       const r = stickFromOrigin(e.clientX, e.clientY, this.joyOriginX, this.joyOriginY, this.joyRadius);
       const dx = r.x, dy = r.y;
@@ -131,7 +141,9 @@ export class Player {
     window.addEventListener('blur', resetInput);
     window.addEventListener('orientationchange', resetInput);
     document.addEventListener('visibilitychange', () => { if (document.hidden) resetInput(); });
-    document.addEventListener('pointerup', (e) => { if (e.pointerId === this.joyId) joyEnd(e); if (e.pointerId === this.lookId) lookEnd(e); });
+    const endPointer = (e: PointerEvent) => { joyEnd(e); lookEnd(e); };
+    document.addEventListener('pointerup', endPointer);
+    document.addEventListener('pointercancel', endPointer);
   }
 
   releaseLock(): void { if (document.pointerLockElement) document.exitPointerLock(); }

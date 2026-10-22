@@ -2,7 +2,7 @@ JOUMERA development verification — 2026-10-22
 
 npm install: passed (existing npm http-proxy configuration warning).
 npm run lint: passed (tsc --noEmit).
-npm test: passed, 63 tests in 5 files.
+npm test: passed, 69 tests in 6 files.
 npm run build: passed (TypeScript and Vite 5.4.21).
 
 New display checks cover rotated off-centre models seated on their surface,
@@ -35,3 +35,9 @@ Rear brand panels sit ahead of the decorative flutes. Raycasting regression
 tests verify the storefront lettering is hit before the backing.
 Camera pitch survives modal opening and suspended frames; leaving pointer lock
 clears input to prevent stale movement. No physical Android validation performed.
+
+Touch lifecycle checks use synthetic pointer events, without a browser renderer:
+stop/restart, modal cancellation, independent fingers, document cancellation,
+orientation and suspended frames. Stop now releases captured pointers so stale
+move events cannot restart walking. Reset also recentres the visible joystick.
+Physical Android touch and performance remain unverified.
